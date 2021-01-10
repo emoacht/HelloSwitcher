@@ -65,7 +65,7 @@ namespace HelloSwitcher
 					using var iconStream = iconResource.Stream;
 					return new System.Drawing.Icon(iconStream);
 				})
-				.Where(x => x != null)
+				.Where(x => x is not null)
 				.ToArray();
 
 			this.IconIndex = iconIndex;

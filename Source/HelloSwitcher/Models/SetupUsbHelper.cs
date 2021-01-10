@@ -200,7 +200,7 @@ namespace HelloSwitcher.Models
 							var hardwareId = Marshal.PtrToStringAuto(propertyBuffer);
 							Debug.WriteLine($"ID: {hardwareId}");
 
-							if (hardwareId?.StartsWith(deviceId, StringComparison.OrdinalIgnoreCase) == true)
+							if (hardwareId?.StartsWith(deviceId, StringComparison.OrdinalIgnoreCase) is true)
 								return true;
 						}
 					}

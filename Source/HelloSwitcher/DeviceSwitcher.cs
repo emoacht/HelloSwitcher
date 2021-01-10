@@ -33,7 +33,7 @@ namespace HelloSwitcher
 		{
 			lock (_lock)
 			{
-				if ((deviceName != null) && (UsbDeviceName != null))
+				if ((deviceName is not null) && (UsbDeviceName is not null))
 				{
 					if (deviceName.IndexOf(UsbDeviceName, StringComparison.OrdinalIgnoreCase) < 0)
 						return;
