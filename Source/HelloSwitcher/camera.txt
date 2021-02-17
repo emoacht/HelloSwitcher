@@ -1,4 +1,0 @@
-﻿// Surface Pro 4 built-in camera - Intel(R) AVStream Camera 2500
-BuiltinCameraId=VIDEO\VEN_8086&DEV_1916&SUBSYS_00151414&REV_07&INT3470
-// Lenovo 500 FHD Webcam - Lenovo 500 IR Camera
-UsbCameraId=USB\VID_17EF&PID_482F

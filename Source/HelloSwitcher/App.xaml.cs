@@ -5,15 +5,17 @@ using System.Data;
 using System.IO;
 using System.Linq;
 using System.Media;
-using System.Reflection;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
+
+using HelloSwitcher.Models;
 
 namespace HelloSwitcher
 {
 	public partial class App : Application
 	{
+		private Settings _settings;
 		private DeviceSwitcher _switcher;
 		private NotifyIconHolder _holder;
 
@@ -25,14 +27,10 @@ namespace HelloSwitcher
 			TaskScheduler.UnobservedTaskException += (_, e) => Record(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (_, e) => Record(e.ExceptionObject);
 
-			var (success, builtinCameraId, usbCameraId) = await Camera.ReadAsync(e.Args);
-			if (!success)
-			{
-				this.Shutdown();
-				return;
-			}
+			_settings = new Settings();
+			await _settings.LoadAsync();
 
-			_switcher = new DeviceSwitcher(builtinCameraId, usbCameraId);
+			_switcher = new DeviceSwitcher(_settings);
 			await _switcher.CheckAsync();
 
 			_holder = new NotifyIconHolder(
@@ -41,7 +39,7 @@ namespace HelloSwitcher
 					"pack://application:,,,/HelloSwitcher;component/Resources/Camera_absent.ico",
 					"pack://application:,,,/HelloSwitcher;component/Resources/Camera_present.ico",
 				},
-				Convert.ToInt32(_switcher.UsbDeviceExists),
+				Convert.ToInt32(_switcher.RemovableCameraExists),
 				"Hello Switcher",
 				new[]
 				{
@@ -61,7 +59,7 @@ namespace HelloSwitcher
 			_holder.UsbDeviceChanged += async (_, e) =>
 			{
 				await _switcher.CheckAsync(e.deviceName, e.exists);
-				_holder.IconIndex = Convert.ToInt32(_switcher.UsbDeviceExists);
+				_holder.IconIndex = Convert.ToInt32(_switcher.RemovableCameraExists);
 			};
 		}
 
@@ -69,7 +67,10 @@ namespace HelloSwitcher
 		{
 			SystemSounds.Exclamation.Play();
 
-			var folderPath = Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location);
+			var folderPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), nameof(HelloSwitcher));
+			if (!Directory.Exists(folderPath))
+				Directory.CreateDirectory(folderPath);
+
 			var filePath = Path.Combine(folderPath, "exception.txt");
 
 			File.WriteAllText(filePath, $"[{DateTime.Now}]\r\n{exception}");

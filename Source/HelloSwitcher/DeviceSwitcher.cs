@@ -11,19 +11,15 @@ namespace HelloSwitcher
 {
 	public class DeviceSwitcher
 	{
-		public string BuiltinDeviceId { get; }
-		public string UsbDeviceId { get; }
-		private string UsbDeviceName { get; }
+		private readonly Settings _settings;
 
-		public DeviceSwitcher(string builtinDeviceId, string usbDeviceId)
+		public DeviceSwitcher(Settings settings)
 		{
-			this.BuiltinDeviceId = builtinDeviceId ?? throw new ArgumentNullException(nameof(builtinDeviceId));
-			this.UsbDeviceId = usbDeviceId ?? throw new ArgumentNullException(nameof(usbDeviceId));
-			UsbDeviceName = usbDeviceId.Replace(@"USB\", "USB#");
+			this._settings = settings ?? throw new ArgumentNullException(nameof(settings));
 		}
 
-		public bool UsbDeviceExists => _usbDeviceExists.GetValueOrDefault();
-		private bool? _usbDeviceExists = null;
+		public bool RemovableCameraExists => _removableCameraExists.GetValueOrDefault();
+		private bool? _removableCameraExists = null;
 
 		private readonly object _lock = new object();
 
@@ -33,33 +29,29 @@ namespace HelloSwitcher
 		{
 			lock (_lock)
 			{
-				if ((deviceName is not null) && (UsbDeviceName is not null))
+				if ((deviceName is not null) && (_settings.RemovableCameraVidPid?.IsValid is true))
 				{
-					if (deviceName.IndexOf(UsbDeviceName, StringComparison.OrdinalIgnoreCase) < 0)
+					if (!_settings.RemovableCameraVidPid.Equals(new VidPid(deviceName)))
 						return;
 				}
 				else
 				{
-					var result = SetupUsbHelper.UsbDeviceExists(UsbDeviceId);
-					if (!result.HasValue)
-						return;
-
-					exists = result.Value;
+					exists = DeviceUsbHelper.UsbCameraExists(_settings.RemovableCameraClassGuid, _settings.RemovableCameraDeviceInstanceId);
 				}
 
-				if (_usbDeviceExists == exists)
+				if (_removableCameraExists == exists)
 					return;
 
-				_usbDeviceExists = exists;
+				_removableCameraExists = exists;
 			}
 
-			if (!_usbDeviceExists.Value)
+			if (!_removableCameraExists.Value)
 				await EnableAsync();
 			else
 				await DisableAsync();
 		}
 
-		public Task<bool> EnableAsync() => DeviceConsole.EnableAsync(BuiltinDeviceId);
-		public Task<bool> DisableAsync() => DeviceConsole.DisableAsync(BuiltinDeviceId);
+		public Task EnableAsync() => PnpUtility.EnableAsync(_settings.BuiltInCameraDeviceInstanceId);
+		public Task DisableAsync() => PnpUtility.DisableAsync(_settings.BuiltInCameraDeviceInstanceId);
 	}
 }
