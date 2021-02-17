@@ -63,9 +63,9 @@ namespace HelloSwitcher.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon Camera_absent {
+        internal static System.Drawing.Icon Connected {
             get {
-                object obj = ResourceManager.GetObject("Camera_absent", resourceCulture);
+                object obj = ResourceManager.GetObject("Connected", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }
@@ -73,9 +73,9 @@ namespace HelloSwitcher.Properties {
         /// <summary>
         ///   Looks up a localized resource of type System.Drawing.Icon similar to (Icon).
         /// </summary>
-        internal static System.Drawing.Icon Camera_present {
+        internal static System.Drawing.Icon Disconnected {
             get {
-                object obj = ResourceManager.GetObject("Camera_present", resourceCulture);
+                object obj = ResourceManager.GetObject("Disconnected", resourceCulture);
                 return ((System.Drawing.Icon)(obj));
             }
         }

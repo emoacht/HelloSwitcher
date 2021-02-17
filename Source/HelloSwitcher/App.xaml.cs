@@ -37,8 +37,8 @@ namespace HelloSwitcher
 			_holder = new NotifyIconHolder(
 				new[]
 				{
-					"pack://application:,,,/HelloSwitcher;component/Resources/Camera_absent.ico",
-					"pack://application:,,,/HelloSwitcher;component/Resources/Camera_present.ico",
+					"pack://application:,,,/HelloSwitcher;component/Resources/Disconnected.ico",
+					"pack://application:,,,/HelloSwitcher;component/Resources/Connected.ico",
 				},
 				Convert.ToInt32(_switcher.RemovableCameraExists),
 				"Hello Switcher",
