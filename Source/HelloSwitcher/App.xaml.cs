@@ -10,6 +10,7 @@ using System.Windows;
 using System.Windows.Threading;
 
 using HelloSwitcher.Models;
+using HelloSwitcher.Views;
 
 namespace HelloSwitcher
 {
@@ -60,7 +61,41 @@ namespace HelloSwitcher
 			{
 				await _switcher.CheckAsync(e.deviceName, e.exists);
 				_holder.IconIndex = Convert.ToInt32(_switcher.RemovableCameraExists);
+				await UpdateWindow();
 			};
+
+			if (!_settings.IsLoaded)
+				ShowWindow();
+		}
+
+		private void ShowWindow()
+		{
+			var window = this.Windows.OfType<SettingsWindow>().FirstOrDefault();
+			if (window is not null)
+			{
+				window.Activate();
+				return;
+			}
+
+			this.MainWindow = new SettingsWindow(_settings);
+			this.MainWindow.Closed += OnClosed;
+			this.MainWindow.Show();
+
+			async void OnClosed(object sender, EventArgs e)
+			{
+				this.MainWindow = null;
+				await _switcher.CheckAsync();
+				_holder.IconIndex = Convert.ToInt32(_switcher.RemovableCameraExists);
+			}
+		}
+
+		private Task UpdateWindow()
+		{
+			var window = this.Windows.OfType<SettingsWindow>().FirstOrDefault();
+			if (window is null)
+				return Task.CompletedTask;
+
+			return window.SearchAsync();
 		}
 
 		private void Record(object exception)

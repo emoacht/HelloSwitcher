@@ -1,0 +1,202 @@
+﻿<Window x:Class="HelloSwitcher.Views.SettingsWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		xmlns:sys="clr-namespace:System;assembly=mscorlib"
+		xmlns:i="http://schemas.microsoft.com/xaml/behaviors"
+		x:Name="WindowRoot"
+		Title="Hello Switcher Settings"
+		Height="300" Width="440" SizeToContent="Height" ResizeMode="NoResize"
+		Background="{DynamicResource App.Background}">
+	<Window.Resources>
+		<SolidColorBrush x:Key="App.Background" Color="#FFfdfdfd"/>
+		<SolidColorBrush x:Key="Light.Background" Color="#FFededed"/>
+		<SolidColorBrush x:Key="Dark.Background" Color="#FFdddddd"/>
+		<SolidColorBrush x:Key="Dark.Foreground" Color="#AA000000"/>
+		<SolidColorBrush x:Key="Accent.Background" Color="#FF0a84d6"/>
+		<SolidColorBrush x:Key="Accent.Foreground" Color="White"/>
+
+		<sys:String x:Key="ItemsEmptyText">No camera is found</sys:String>
+
+		<!-- CheckBox -->
+		<Style x:Key="SelectionCheckBoxStyle" TargetType="{x:Type CheckBox}">
+			<Setter Property="Background" Value="Transparent"/>
+			<Setter Property="Opacity" Value="0"/>
+			<Setter Property="TextElement.Foreground" Value="{StaticResource Dark.Foreground}"/>
+			<Setter Property="HorizontalContentAlignment" Value="Center"/>
+			<Setter Property="VerticalContentAlignment" Value="Center"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate TargetType="{x:Type CheckBox}">
+						<Grid Background="{TemplateBinding Background}">
+							<ContentPresenter HorizontalAlignment="{TemplateBinding HorizontalContentAlignment}"
+											  VerticalAlignment="{TemplateBinding VerticalContentAlignment}"/>
+						</Grid>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+			<Style.Triggers>
+				<Trigger Property="IsChecked" Value="True">
+					<Setter Property="Background" Value="{StaticResource Accent.Background}"/>
+					<Setter Property="Opacity" Value="1"/>
+					<Setter Property="TextElement.Foreground" Value="{StaticResource Accent.Foreground}"/>
+				</Trigger>
+			</Style.Triggers>
+		</Style>
+
+		<!-- ListView -->
+		<Style x:Key="CameraListViewStyle" TargetType="{x:Type ListView}">
+			<Setter Property="AlternationCount" Value="2"/>
+			<Setter Property="UseLayoutRounding" Value="True"/>
+			<Setter Property="SnapsToDevicePixels" Value="True"/>
+			<Setter Property="Template">
+				<Setter.Value>
+					<ControlTemplate>
+						<Border BorderThickness="0">
+							<ScrollViewer>
+								<VirtualizingStackPanel IsItemsHost="True"/>
+							</ScrollViewer>
+						</Border>
+					</ControlTemplate>
+				</Setter.Value>
+			</Setter>
+			<Setter Property="ItemTemplate">
+				<Setter.Value>
+					<DataTemplate>
+						<Grid>
+							<Grid.ColumnDefinitions>
+								<ColumnDefinition Width="60"/>
+								<ColumnDefinition Width="60"/>
+								<ColumnDefinition Width="*"/>
+								<ColumnDefinition Width="Auto"/>
+								<ColumnDefinition Width="10"/>
+							</Grid.ColumnDefinitions>
+
+							<Rectangle Grid.Column="0" Grid.ColumnSpan="5"
+									   x:Name="SmokeGlass"
+									   Fill="White" Opacity="0"/>
+
+							<CheckBox Grid.Column="0"
+									  x:Name="BuiltInCameraCheckBox"
+									  Style="{StaticResource SelectionCheckBoxStyle}"
+									  IsChecked="{Binding IsBuiltInCameraSelected}">
+								<TextBlock>
+									<Run Text="Built-in"/><LineBreak/><Run Text="Camera"/>
+								</TextBlock>
+							</CheckBox>
+
+							<CheckBox Grid.Column="1"
+									  x:Name="RemovableCameraCheckBox"
+									  Style="{StaticResource SelectionCheckBoxStyle}"
+									  IsChecked="{Binding IsRemovableCameraSelected}">
+								<TextBlock>
+									<Run Text="USB"/><LineBreak/><Run Text="Camera"/>
+								</TextBlock>
+							</CheckBox>
+
+							<TextBlock Grid.Column="2"
+									   Margin="12,8">
+								<Run Text="{Binding Description, Mode=OneTime}"/>
+								<LineBreak/>
+								<Run Text="{Binding Manufacturer, Mode=OneTime}"/>
+							</TextBlock>
+
+							<Label Grid.Column="3"
+								   Content="{Binding Status, Mode=OneWay}"/>
+						</Grid>
+
+						<DataTemplate.Triggers>
+							<Trigger Property="IsMouseOver" Value="True">
+								<Setter TargetName="SmokeGlass" Property="Opacity" Value="0.2"/>
+								<Setter TargetName="BuiltInCameraCheckBox" Property="Opacity" Value="1"/>
+								<Setter TargetName="RemovableCameraCheckBox" Property="Opacity" Value="1"/>
+							</Trigger>
+						</DataTemplate.Triggers>
+					</DataTemplate>
+				</Setter.Value>
+			</Setter>
+			<Setter Property="ItemContainerStyle">
+				<Setter.Value>
+					<Style TargetType="{x:Type ListViewItem}">
+						<Setter Property="OverridesDefaultStyle" Value="True"/>
+						<Setter Property="Margin" Value="0"/>
+						<Setter Property="Template">
+							<Setter.Value>
+								<ControlTemplate TargetType="{x:Type ContentControl}">
+									<Grid x:Name="Container">
+										<ContentPresenter/>
+									</Grid>
+
+									<ControlTemplate.Triggers>
+										<Trigger Property="ItemsControl.AlternationIndex" Value="0">
+											<Setter TargetName="Container" Property="Background" Value="{StaticResource Dark.Background}"/>
+										</Trigger>
+										<Trigger Property="ItemsControl.AlternationIndex" Value="1">
+											<Setter TargetName="Container" Property="Background" Value="{StaticResource Light.Background}"/>
+										</Trigger>
+									</ControlTemplate.Triggers>
+								</ControlTemplate>
+							</Setter.Value>
+						</Setter>
+					</Style>
+				</Setter.Value>
+			</Setter>
+			<Style.Triggers>
+				<Trigger Property="HasItems" Value="False">
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate>
+								<Grid Background="{StaticResource Light.Background}">
+									<TextBlock Margin="20,8"
+											   Text="{StaticResource ItemsEmptyText}"/>
+								</Grid>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Trigger>
+			</Style.Triggers>
+		</Style>
+	</Window.Resources>
+
+	<StackPanel>
+		<TextBox Margin="10,8,10,8"
+				 Padding="4"
+				 VerticalContentAlignment="Center"
+				 TextWrapping="Wrap" IsReadOnly="True"
+				 Text="{Binding OperationStatus, Mode=OneWay, FallbackValue=Unknown}"/>
+
+		<Label Margin="10,0,10,0"
+			   Content="Cameras for Windows Hello"/>
+		<ListView Style="{StaticResource CameraListViewStyle}"
+				  ItemsSource="{Binding CamerasView}"/>
+
+		<Grid Margin="10,14,10,10">
+			<Grid.ColumnDefinitions>
+				<ColumnDefinition/>
+				<ColumnDefinition Width="90"/>
+				<ColumnDefinition Width="90"/>
+			</Grid.ColumnDefinitions>
+
+			<Button Grid.Column="1"
+					Padding="4"
+					Content="Apply"
+					IsEnabled="{Binding CanApply, Mode=OneWay}">
+				<i:Interaction.Triggers>
+					<i:EventTrigger EventName="Click">
+						<i:CallMethodAction TargetObject="{Binding ElementName=WindowRoot}"
+											MethodName="Apply"/>
+					</i:EventTrigger>
+				</i:Interaction.Triggers>
+			</Button>
+			<Button Grid.Column="2"
+					Padding="4"
+					Content="Cancel">
+				<i:Interaction.Triggers>
+					<i:EventTrigger EventName="Click">
+						<i:CallMethodAction TargetObject="{Binding RelativeSource={RelativeSource FindAncestor, AncestorType={x:Type Window}}}"
+											MethodName="Close"/>
+					</i:EventTrigger>
+				</i:Interaction.Triggers>
+			</Button>
+		</Grid>
+	</StackPanel>
+</Window>
