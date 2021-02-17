@@ -40,15 +40,29 @@ namespace HelloSwitcher
 					"pack://application:,,,/HelloSwitcher;component/Resources/Disconnected.ico",
 					"pack://application:,,,/HelloSwitcher;component/Resources/Connected.ico",
 				},
-				Convert.ToInt32(_switcher.RemovableCameraExists),
 				"Hello Switcher",
 				new[]
 				{
 					(ToolStripItemType.Label, "Hello Switcher", null),
 					(ToolStripItemType.Separator, null, null),
-					(ToolStripItemType.Button, "Re-check USB camera", async () => await _switcher.CheckAsync()),
-					(ToolStripItemType.Button, "Enable built-in camera", async () => await _switcher.EnableAsync()),
-					(ToolStripItemType.Button, "Disable built-in camera", async () => await _switcher.DisableAsync()),
+					(ToolStripItemType.Button, "Open settings", () => ShowWindow()),
+					(ToolStripItemType.Separator, null, null),
+					(ToolStripItemType.Button, "Re-check USB camera", async () =>
+					{
+						await _switcher.CheckAsync();
+						_holder.UpdateIcon(_switcher.RemovableCameraExists);
+						await UpdateWindow();
+					}),
+					(ToolStripItemType.Button, "Enable built-in camera", async () =>
+					{
+						await _switcher.EnableAsync();
+						await UpdateWindow();
+					}),
+					(ToolStripItemType.Button, "Disable built-in camera", async () =>
+					{
+						await _switcher.DisableAsync();
+						await UpdateWindow();
+					}),
 					(ToolStripItemType.Separator, null, null),
 					(ToolStripItemType.Button,"Close", new Action(async () =>
 					{
@@ -56,11 +70,12 @@ namespace HelloSwitcher
 						this.Shutdown();
 					}))
 				});
+			_holder.UpdateIcon(_switcher.RemovableCameraExists);
 
 			_holder.UsbDeviceChanged += async (_, e) =>
 			{
 				await _switcher.CheckAsync(e.deviceName, e.exists);
-				_holder.IconIndex = Convert.ToInt32(_switcher.RemovableCameraExists);
+				_holder.UpdateIcon(_switcher.RemovableCameraExists);
 				await UpdateWindow();
 			};
 
@@ -85,7 +100,7 @@ namespace HelloSwitcher
 			{
 				this.MainWindow = null;
 				await _switcher.CheckAsync();
-				_holder.IconIndex = Convert.ToInt32(_switcher.RemovableCameraExists);
+				_holder.UpdateIcon(_switcher.RemovableCameraExists);
 			}
 		}
 
