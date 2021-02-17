@@ -68,6 +68,7 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Models\DeviceConsole.cs" />
+    <Compile Include="Models\PnpUtility.cs" />
     <Compile Include="Models\SetupUsbHelper.cs" />
     <Compile Include="Models\WmiUsbHelper.cs" />
   </ItemGroup>

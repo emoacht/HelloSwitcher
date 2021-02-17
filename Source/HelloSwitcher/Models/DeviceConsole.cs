@@ -9,6 +9,12 @@ using System.Threading.Tasks;
 
 namespace HelloSwitcher.Models
 {
+	/// <summary>
+	/// Utility methods by DevCon
+	/// </summary>
+	/// <remarks>
+	/// https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/devcon
+	/// </remarks>
 	internal static class DeviceConsole
 	{
 		private const string DevconFileName = "Devcon.exe";
