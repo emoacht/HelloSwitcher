@@ -9,16 +9,16 @@ using System.Threading.Tasks;
 namespace HelloSwitcher.Models
 {
 	/// <summary>
-	/// Utility methods for USB devices by Setup API
+	/// Utility methods for USB devices by Device Information Functions
 	/// </summary>
-	internal static class SetupUsbHelper
+	internal static class DeviceUsbHelper
 	{
 		#region Win32
 
 		[DllImport("SetupAPI.dll", CharSet = CharSet.Auto, SetLastError = true)]
 		private static extern IntPtr SetupDiGetClassDevs(
-			IntPtr ClassGuid,
-			string Enumerator,
+			[MarshalAs(UnmanagedType.LPStruct), In] Guid ClassGuid,
+			[MarshalAs(UnmanagedType.LPWStr), In] string Enumerator,
 			IntPtr hwndParent,
 			DIGCF Flags);
 
@@ -27,10 +27,23 @@ namespace HelloSwitcher.Models
 		{
 			DIGCF_DEFAULT = 0x00000001,
 			DIGCF_PRESENT = 0x00000002,
+
+			/// <summary>
+			/// Return a list of installed devices for all device setup classes or all device interface classes. 
+			/// </summary>
+			/// <remarks>
+			/// This flag overwrites ClassGuid parameter.
+			/// https://docs.microsoft.com/en-us/windows/win32/api/setupapi/nf-setupapi-setupdigetclassdevsw#remarks
+			/// </remarks>
 			DIGCF_ALLCLASSES = 0x00000004,
+
 			DIGCF_PROFILE = 0x00000008,
 			DIGCF_DEVICEINTERFACE = 0x00000010,
 		}
+
+		[DllImport("SetupAPI.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
 
 		[DllImport("SetupAPI.dll", SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
@@ -48,10 +61,6 @@ namespace HelloSwitcher.Models
 			public IntPtr Reserved;
 		}
 
-		[DllImport("SetupAPI.dll", SetLastError = true)]
-		[return: MarshalAs(UnmanagedType.Bool)]
-		private static extern bool SetupDiDestroyDeviceInfoList(IntPtr DeviceInfoSet);
-
 		[DllImport("SetupAPI.dll", CharSet = CharSet.Auto, SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		private static extern bool SetupDiGetDeviceRegistryProperty(
@@ -61,7 +70,7 @@ namespace HelloSwitcher.Models
 			IntPtr PropertyRegDataType,
 			IntPtr PropertyBuffer,
 			uint PropertyBufferSize,
-			ref uint RequiredSize);
+			out uint RequiredSize);
 
 		private enum SPDRP : uint
 		{
@@ -100,6 +109,30 @@ namespace HelloSwitcher.Models
 			SPDRP_LOCATION_PATHS = 0x00000023
 		}
 
+		[Flags]
+		private enum CM_DEVCAP : uint
+		{
+			CM_DEVCAP_LOCKSUPPORTED = 0x00000001,
+			CM_DEVCAP_EJECTSUPPORTED = 0x00000002,
+			CM_DEVCAP_REMOVABLE = 0x00000004,
+			CM_DEVCAP_DOCKDEVICE = 0x00000008,
+			CM_DEVCAP_UNIQUEID = 0x00000010,
+			CM_DEVCAP_SILENTINSTALL = 0x00000020,
+			CM_DEVCAP_RAWDEVICEOK = 0x00000040,
+			CM_DEVCAP_SURPRISEREMOVALOK = 0x00000080,
+			CM_DEVCAP_HARDWAREDISABLED = 0x00000100,
+			CM_DEVCAP_NONDYNAMIC = 0x00000200
+		}
+
+		[DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool SetupDiGetDeviceInstanceId(
+			IntPtr DeviceInfoSet,
+			ref SP_DEVINFO_DATA DeviceInfoData,
+			[Out] StringBuilder DeviceInstanceId,
+			uint DeviceInstanceIdSize,
+			out uint RequiredSize);
+
 		[DllImport("User32.dll", CharSet = CharSet.Auto, SetLastError = true)]
 		private static extern IntPtr RegisterDeviceNotification(
 			IntPtr hRecipient,
@@ -131,6 +164,7 @@ namespace HelloSwitcher.Models
 		}
 
 		private const int INVALID_HANDLE_VALUE = -1;
+		private const int ERROR_NO_MORE_ITEMS = 259;
 
 		#endregion
 
@@ -139,88 +173,167 @@ namespace HelloSwitcher.Models
 		public const int DBT_DEVICEARRIVAL = 0x8000;
 		public const int DBT_DEVICEREMOVECOMPLETE = 0x8004;
 
+		#region Type
+
+		public class UsbCameraItem
+		{
+			internal Guid ClassGuid { get; }
+
+			public string DeviceInstanceId { get; }
+			public string FriendlyName { get; }
+			public bool IsRemovable { get; }
+
+			public UsbCameraItem(Guid classGuid, string deviceInstanceId, string friendlyName, bool isRemovable)
+			{
+				this.ClassGuid = classGuid;
+				this.DeviceInstanceId = deviceInstanceId;
+				this.FriendlyName = friendlyName;
+				this.IsRemovable = isRemovable;
+			}
+		}
+
+		#endregion
+
 		#region Check
 
-		private const int BUFFER_SIZE = 1024;
+		private readonly static Guid CameraClassGuid = new Guid("{ca3e7ab9-b4c3-4ae6-8251-579ef933890f}");
+		private readonly static Guid ImageClassGuid = new Guid("{6bdd1fc6-810f-11d0-bec7-08002be2092f}");
 
-		public static bool? UsbDeviceExists(string deviceId)
+		public static IEnumerable<UsbCameraItem> EnumerateUsbCameras()
+		{
+			static UsbCameraItem Convert(Guid classGuid, IntPtr deviceInfoSet, SP_DEVINFO_DATA deviceInfoData)
+			{
+				var friendlyName = GetDevicePropertyString(deviceInfoSet, deviceInfoData, SPDRP.SPDRP_FRIENDLYNAME);
+				var capabilities = (CM_DEVCAP)GetDevicePropertyUInt(deviceInfoSet, deviceInfoData, SPDRP.SPDRP_CAPABILITIES);
+				var isRemovable = capabilities.HasFlag(CM_DEVCAP.CM_DEVCAP_REMOVABLE);
+				var deviceInstanceId = GetDeviceInstanceId(deviceInfoSet, deviceInfoData);
+
+				return new UsbCameraItem(classGuid, deviceInstanceId, friendlyName, isRemovable);
+			}
+
+			return EnumerateUsbDevices(CameraClassGuid, Convert)
+				.Concat(EnumerateUsbDevices(ImageClassGuid, Convert));
+		}
+
+		public static bool UsbCameraExists(Guid classGuid, string deviceInstanceId)
+		{
+			return EnumerateUsbDevices(classGuid, (classGuid, deviceInfoSet, deviceInfoData) => GetDeviceInstanceId(deviceInfoSet, deviceInfoData))
+				.Any(x => string.Equals(x, deviceInstanceId, StringComparison.OrdinalIgnoreCase));
+		}
+
+		private static IEnumerable<T> EnumerateUsbDevices<T>(Guid classGuid, Func<Guid, IntPtr, SP_DEVINFO_DATA, T> convert)
 		{
 			var deviceInfoSet = IntPtr.Zero;
-			var propertyBuffer = IntPtr.Zero;
 			try
 			{
-				propertyBuffer = Marshal.AllocHGlobal(BUFFER_SIZE);
-
 				deviceInfoSet = SetupDiGetClassDevs(
-					IntPtr.Zero,
+					classGuid,
 					"USB",
 					IntPtr.Zero,
-					DIGCF.DIGCF_PRESENT | DIGCF.DIGCF_ALLCLASSES);
-				if (deviceInfoSet.ToInt32() == INVALID_HANDLE_VALUE)
-					return null;
+					DIGCF.DIGCF_PRESENT);
+				if (deviceInfoSet.ToInt32() == INVALID_HANDLE_VALUE) // Assuming 32bit process
+					yield break;
 
 				uint index = 0;
+
 				while (true)
 				{
 					var deviceInfoData = new SP_DEVINFO_DATA { cbSize = (uint)Marshal.SizeOf<SP_DEVINFO_DATA>() };
 
-					if (!SetupDiEnumDeviceInfo(
+					if (SetupDiEnumDeviceInfo(
 						deviceInfoSet,
 						index,
 						ref deviceInfoData))
 					{
-						break;
+						// var classGuidString = GetDevicePropertyString(deviceInfoSet, deviceInfoData, SPDRP.SPDRP_CLASSGUID);
+						yield return convert.Invoke(classGuid, deviceInfoSet, deviceInfoData);
 					}
-
-					uint requiredSize = 0;
-
-					// First attempt is to get required size.
-					SetupDiGetDeviceRegistryProperty(
-						deviceInfoSet,
-						ref deviceInfoData,
-						SPDRP.SPDRP_HARDWAREID,
-						IntPtr.Zero,
-						IntPtr.Zero,
-						0,
-						ref requiredSize);
-
-					if (requiredSize <= BUFFER_SIZE)
+					else if (Marshal.GetLastWin32Error() == ERROR_NO_MORE_ITEMS)
 					{
-						// Second attempt is to get property value.
-						if (SetupDiGetDeviceRegistryProperty(
-							deviceInfoSet,
-							ref deviceInfoData,
-							SPDRP.SPDRP_HARDWAREID,
-							IntPtr.Zero,
-							propertyBuffer,
-							BUFFER_SIZE,
-							ref requiredSize) &&
-							(propertyBuffer != IntPtr.Zero))
-						{
-							var hardwareId = Marshal.PtrToStringAuto(propertyBuffer);
-							Debug.WriteLine($"ID: {hardwareId}");
-
-							if (hardwareId?.StartsWith(deviceId, StringComparison.OrdinalIgnoreCase) is true)
-								return true;
-						}
+						yield break;
 					}
 					index++;
 				}
-				return false;
-			}
-			catch (Exception ex)
-			{
-				Debug.WriteLine(ex);
-				return null;
 			}
 			finally
 			{
 				if (deviceInfoSet != IntPtr.Zero)
 					SetupDiDestroyDeviceInfoList(deviceInfoSet);
-
-				if (propertyBuffer != IntPtr.Zero)
-					Marshal.FreeHGlobal(propertyBuffer);
 			}
+		}
+
+		private static string GetDevicePropertyString(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SPDRP property)
+		{
+			return GetDevicePropertyValue(DeviceInfoSet, DeviceInfoData, property, (pointer, _) => Marshal.PtrToStringAuto(pointer));
+		}
+
+		private static uint GetDevicePropertyUInt(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SPDRP property)
+		{
+			return GetDevicePropertyValue(DeviceInfoSet, DeviceInfoData, property, (pointer, size) =>
+			{
+				var array = new byte[size];
+				Marshal.Copy(pointer, array, 0, (int)size);
+				return BitConverter.ToUInt32(array, 0);
+			});
+		}
+
+		private static T GetDevicePropertyValue<T>(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData, SPDRP property, Func<IntPtr, uint, T> convert)
+		{
+			SetupDiGetDeviceRegistryProperty(
+				DeviceInfoSet,
+				ref DeviceInfoData,
+				property,
+				IntPtr.Zero,
+				IntPtr.Zero,
+				0,
+				out uint requiredSize);
+
+			var buffer = IntPtr.Zero;
+			try
+			{
+				buffer = Marshal.AllocHGlobal((int)requiredSize);
+
+				if (SetupDiGetDeviceRegistryProperty(
+					DeviceInfoSet,
+					ref DeviceInfoData,
+					property,
+					IntPtr.Zero,
+					buffer,
+					requiredSize,
+					out _))
+				{
+					return convert.Invoke(buffer, requiredSize);
+				}
+				return default;
+			}
+			finally
+			{
+				if (buffer != IntPtr.Zero)
+					Marshal.FreeHGlobal(buffer);
+			}
+		}
+
+		private static string GetDeviceInstanceId(IntPtr DeviceInfoSet, SP_DEVINFO_DATA DeviceInfoData)
+		{
+			SetupDiGetDeviceInstanceId(
+				DeviceInfoSet,
+				ref DeviceInfoData,
+				null,
+				0,
+				out uint requiredSize);
+
+			var buffer = new StringBuilder((int)requiredSize);
+
+			if (SetupDiGetDeviceInstanceId(
+				DeviceInfoSet,
+				ref DeviceInfoData,
+				buffer,
+				requiredSize,
+				out _))
+			{
+				return buffer.ToString();
+			}
+			return default;
 		}
 
 		#endregion

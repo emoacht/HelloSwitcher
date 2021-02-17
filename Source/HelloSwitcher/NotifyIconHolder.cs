@@ -94,7 +94,7 @@ namespace HelloSwitcher
 			if (_listener is null)
 				return;
 
-			SetupUsbHelper.RegisterUsbDeviceNotification(_listener.Handle);
+			DeviceUsbHelper.RegisterUsbDeviceNotification(_listener.Handle);
 		}
 
 		public int IconIndex
@@ -117,14 +117,14 @@ namespace HelloSwitcher
 		{
 			switch (m.Msg)
 			{
-				case SetupUsbHelper.WM_DEVICECHANGE:
+				case DeviceUsbHelper.WM_DEVICECHANGE:
 					switch (m.WParam.ToInt32())
 					{
-						case SetupUsbHelper.DBT_DEVICEREMOVECOMPLETE:
+						case DeviceUsbHelper.DBT_DEVICEREMOVECOMPLETE:
 							RaiseUsbDeviceChanged(m.LParam, false);
 							break;
 
-						case SetupUsbHelper.DBT_DEVICEARRIVAL:
+						case DeviceUsbHelper.DBT_DEVICEARRIVAL:
 							RaiseUsbDeviceChanged(m.LParam, true);
 							break;
 					}
@@ -133,7 +133,7 @@ namespace HelloSwitcher
 
 			void RaiseUsbDeviceChanged(IntPtr LParam, bool exists)
 			{
-				if (SetupUsbHelper.TryGetDeviceName(LParam, out string deviceName))
+				if (DeviceUsbHelper.TryGetDeviceName(LParam, out string deviceName))
 					UsbDeviceChanged?.Invoke(_notifyIcon, (deviceName, exists));
 			}
 		}
@@ -156,7 +156,7 @@ namespace HelloSwitcher
 			if (disposing)
 			{
 				// Free any other managed objects here.
-				SetupUsbHelper.UnregisterUsbDeviceNotification();
+				DeviceUsbHelper.UnregisterUsbDeviceNotification();
 				_listener?.Close();
 				_notifyIcon?.Dispose();
 			}

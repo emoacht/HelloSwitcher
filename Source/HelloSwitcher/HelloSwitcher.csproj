@@ -68,12 +68,11 @@
       <SubType>Code</SubType>
     </Compile>
     <Compile Include="Models\DeviceConsole.cs" />
+    <Compile Include="Models\DeviceUsbHelper.cs" />
     <Compile Include="Models\PnpUtility.cs" />
-    <Compile Include="Models\SetupUsbHelper.cs" />
     <Compile Include="Models\WmiUsbHelper.cs" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Camera.cs" />
     <Compile Include="DeviceSwitcher.cs" />
     <Compile Include="NotifyIconHelper.cs" />
     <Compile Include="NotifyIconHolder.cs" />
@@ -104,20 +103,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="camera.txt">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-  </ItemGroup>
-  <ItemGroup>
     <Resource Include="Resources\Camera_present.ico" />
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Camera_absent.ico" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="Devcon.exe">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
