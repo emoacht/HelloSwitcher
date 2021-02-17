@@ -9,7 +9,7 @@ using System.Threading.Tasks;
 namespace HelloSwitcher.Models
 {
 	/// <summary>
-	/// Utility methods for USB devices by WMI 
+	/// Utility methods for USB devices by WMI
 	/// </summary>
 	internal class WmiUsbHelper : IDisposable
 	{
