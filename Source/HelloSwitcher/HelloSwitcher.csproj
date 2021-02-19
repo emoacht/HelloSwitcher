@@ -71,6 +71,7 @@
     </Compile>
     <Compile Include="Models\DeviceConsole.cs" />
     <Compile Include="Models\DeviceUsbHelper.cs" />
+    <Compile Include="Models\Logger.cs" />
     <Compile Include="Models\PnpUtility.cs" />
     <Compile Include="Models\Settings.cs" />
     <Compile Include="Models\VidPid.cs" />
