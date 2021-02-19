@@ -52,7 +52,7 @@ namespace HelloSwitcher
 				"Hello Switcher",
 				new[]
 				{
-					(ToolStripItemType.Label, "Hello Switcher", null),
+					(ToolStripItemType.Label, "Hello Switcher", (Action)null), // (Action) is necessary to indicate the type.
 					(ToolStripItemType.Separator, null, null),
 					(ToolStripItemType.Button, "Open settings", () => ShowWindow()),
 					(ToolStripItemType.Separator, null, null),
@@ -73,11 +73,11 @@ namespace HelloSwitcher
 						await UpdateWindow();
 					}),
 					(ToolStripItemType.Separator, null, null),
-					(ToolStripItemType.Button,"Close", new Action(async () =>
+					(ToolStripItemType.Button,"Close", async () =>
 					{
 						await _switcher.EnableAsync();
 						this.Shutdown();
-					}))
+					})
 				});
 			_holder.UpdateIcon(_switcher.RemovableCameraExists);
 
