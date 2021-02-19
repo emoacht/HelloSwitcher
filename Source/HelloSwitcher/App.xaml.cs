@@ -18,6 +18,8 @@ namespace HelloSwitcher
 		private DeviceSwitcher _switcher;
 		private NotifyIconHolder _holder;
 
+		internal static bool IsService { get; } = !Environment.UserInteractive;
+
 		protected override async void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
@@ -26,11 +28,20 @@ namespace HelloSwitcher
 			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordException(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordException(e.ExceptionObject);
 
+			if (IsService)
+				Logger.RecordOperation($"Start", false);
+
 			_settings = new Settings();
 			await _settings.LoadAsync();
 
 			_switcher = new DeviceSwitcher(_settings);
 			await _switcher.CheckAsync();
+
+			if (IsService)
+			{
+				this.Shutdown();
+				return;
+			}
 
 			_holder = new NotifyIconHolder(
 				new[]

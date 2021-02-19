@@ -76,6 +76,9 @@ namespace HelloSwitcher.Models
 			}
 
 			IsLoaded = !properties.Any();
+
+			if (App.IsService)
+				Logger.RecordOperation($"{nameof(LoadAsync)} {nameof(IsLoaded)}:[{IsLoaded}]");
 		}
 
 		public async Task SaveAsync()

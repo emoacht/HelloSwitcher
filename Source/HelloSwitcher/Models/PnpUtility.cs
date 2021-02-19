@@ -27,6 +27,8 @@ namespace HelloSwitcher.Models
 			foreach (var line in lines)
 				Debug.WriteLine($"RE {line}");
 #endif
+			if (App.IsService)
+				Logger.RecordOperation($"{nameof(ExecuteAsync)}, {nameof(arguments)}:[{arguments}]{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
 		}
 
 		#region Type
