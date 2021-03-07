@@ -1,11 +1,11 @@
 ﻿# Hello Switcher
 
-Hello Switcher is a Windows desktop tool to help switching Windows Hello cameras.
+Hello Switcher is a Windows desktop tool to help switching cameras for Windows Hello.
 
 ![Screenshot](Images/Screenshot_settings.png)<br>
 (DPI: 150%)
 
-If your PC has a built-in Windows Hello camera like a Surface series and you wish to add a USB web camera which has Windows Hello capability* for using Windows Hello authentication even when the built-in camera cannot be used, you will not be able to switch the two cameras as you might expect. It is because Microsoft has not added the functionality to manage multiple Windows Hello cameras to Windows 10 yet.
+If your PC has a built-in Windows Hello camera like a Surface series and you wish to add a USB camera which has Windows Hello capability* for using Windows Hello authentication even when the built-in camera is unusable, you will not be able to switch the two cameras as you might expect. It is because Microsoft has not added the functionality to manage multiple Windows Hello cameras to the OS yet.
 
 This tool helps switching between a built-in camera and a USB camera. It works as follows:
 
@@ -23,7 +23,7 @@ This tool internally calls [PnPUtil](https://docs.microsoft.com/en-us/windows-ha
 
 ## Download
 
-:floppy_disk: [Executable](https://github.com/emoacht/HelloSwitcher/releases/download/1.1.0/HelloSwitcher110.zip)
+:floppy_disk: [Latest release](https://github.com/emoacht/HelloSwitcher/releases/latest)
 
 ## Getting started
 
@@ -39,7 +39,8 @@ This tool internally calls [PnPUtil](https://docs.microsoft.com/en-us/windows-ha
 
 ## Remarks
 
-Since this tool runs after the OS's sign-in, it cannot change at sign-in, enabled/disabled state of the specified built-in camera at last sign-out.
+ - This tool has to be run as administrator because it is required to enable/disable a device.
+ - This tool cannot change enabled/disabled state of the specified built-in camera at the OS's sign-in because it runs after sign-in. It means that if the specified USB camera is connected before sign-out and then disconnected before sign-in, no camera will be available for Windows Hello at sign-in.
 
 ## History
 
