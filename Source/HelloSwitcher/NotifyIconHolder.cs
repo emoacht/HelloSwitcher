@@ -7,48 +7,11 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 using System.Windows.Threading;
 
-using HelloSwitcher.Models;
-
 namespace HelloSwitcher
 {
 	public class NotifyIconHolder : IDisposable
 	{
-		#region Type
-
-		private class NotifyIconWindowListener : NativeWindow
-		{
-			public static NotifyIconWindowListener Create(NotifyIconHolder container)
-			{
-				if (!NotifyIconHelper.TryGetNotifyIconWindow(container._notifyIcon, out NativeWindow window)
-					|| (window.Handle == IntPtr.Zero))
-				{
-					return null;
-				}
-				return new NotifyIconWindowListener(container, window);
-			}
-
-			private readonly NotifyIconHolder _container;
-
-			private NotifyIconWindowListener(NotifyIconHolder container, NativeWindow window)
-			{
-				this._container = container;
-				this.AssignHandle(window.Handle);
-			}
-
-			protected override void WndProc(ref Message m)
-			{
-				_container.WndProc(ref m);
-
-				base.WndProc(ref m);
-			}
-
-			public void Close() => this.ReleaseHandle();
-		}
-
-		#endregion
-
 		private readonly NotifyIcon _notifyIcon;
-		private readonly NotifyIconWindowListener _listener;
 
 		public NotifyIconHolder(string[] iconUriStrings, string iconText, (ToolStripItemType type, string text, Action action)[] menus)
 		{
@@ -101,13 +64,7 @@ namespace HelloSwitcher
 			}
 
 			// Show NotifyIcon.
-			_notifyIcon.Visible = true;
-
-			_listener = NotifyIconWindowListener.Create(this);
-			if (_listener is null)
-				return;
-
-			DeviceUsbHelper.RegisterUsbDeviceNotification(_listener.Handle);
+			_notifyIcon.Visible = true;			
 		}
 
 		#region Icons
@@ -143,33 +100,6 @@ namespace HelloSwitcher
 
 		#endregion
 
-		public event EventHandler<(string deviceName, bool exists)> UsbDeviceChanged;
-
-		private void WndProc(ref Message m)
-		{
-			switch (m.Msg)
-			{
-				case DeviceUsbHelper.WM_DEVICECHANGE:
-					switch (m.WParam.ToInt32())
-					{
-						case DeviceUsbHelper.DBT_DEVICEREMOVECOMPLETE:
-							RaiseUsbDeviceChanged(m.LParam, false);
-							break;
-
-						case DeviceUsbHelper.DBT_DEVICEARRIVAL:
-							RaiseUsbDeviceChanged(m.LParam, true);
-							break;
-					}
-					break;
-			}
-
-			void RaiseUsbDeviceChanged(IntPtr LParam, bool exists)
-			{
-				if (DeviceUsbHelper.TryGetDeviceName(LParam, out string deviceName))
-					UsbDeviceChanged?.Invoke(_notifyIcon, (deviceName, exists));
-			}
-		}
-
 		#region IDisposable
 
 		private bool _isDisposed = false;
@@ -188,8 +118,6 @@ namespace HelloSwitcher
 			if (disposing)
 			{
 				// Free any other managed objects here.
-				DeviceUsbHelper.UnregisterUsbDeviceNotification();
-				_listener?.Close();
 				_notifyIcon?.Dispose();
 			}
 

@@ -71,6 +71,7 @@
     </Compile>
     <Compile Include="Models\DeviceConsole.cs" />
     <Compile Include="Models\DeviceUsbHelper.cs" />
+    <Compile Include="Models\DeviceUsbWatcher.cs" />
     <Compile Include="Models\Logger.cs" />
     <Compile Include="Models\PnpUtility.cs" />
     <Compile Include="Models\Settings.cs" />
@@ -94,7 +95,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="DeviceSwitcher.cs" />
-    <Compile Include="NotifyIconHelper.cs" />
     <Compile Include="NotifyIconHolder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>

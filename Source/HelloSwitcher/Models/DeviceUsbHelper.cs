@@ -231,7 +231,7 @@ namespace HelloSwitcher.Models
 					"USB",
 					IntPtr.Zero,
 					DIGCF.DIGCF_PRESENT);
-				if (deviceInfoSet.ToInt32() == INVALID_HANDLE_VALUE) // Assuming 32bit process
+				if ((Environment.Is64BitProcess ? deviceInfoSet.ToInt64() : deviceInfoSet.ToInt32()) == INVALID_HANDLE_VALUE)
 					yield break;
 
 				uint index = 0;
