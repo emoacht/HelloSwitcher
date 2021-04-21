@@ -16,6 +16,7 @@ namespace HelloSwitcher
 	{
 		private Settings _settings;
 		private DeviceSwitcher _switcher;
+		private DeviceUsbWatcher _watcher;
 		private NotifyIconHolder _holder;
 
 		internal static bool IsService { get; } = !Environment.UserInteractive;
@@ -37,59 +38,61 @@ namespace HelloSwitcher
 			_switcher = new DeviceSwitcher(_settings);
 			await _switcher.CheckAsync();
 
-			if (IsService)
-			{
-				this.Shutdown();
-				return;
-			}
-
-			_holder = new NotifyIconHolder(
-				new[]
-				{
-					"pack://application:,,,/HelloSwitcher;component/Resources/Disconnected.ico",
-					"pack://application:,,,/HelloSwitcher;component/Resources/Connected.ico",
-				},
-				"Hello Switcher",
-				new[]
-				{
-					(ToolStripItemType.Label, "Hello Switcher", (Action)null), // (Action) is necessary to indicate the type.
-					(ToolStripItemType.Separator, null, null),
-					(ToolStripItemType.Button, "Open settings", () => ShowWindow()),
-					(ToolStripItemType.Separator, null, null),
-					(ToolStripItemType.Button, "Re-check USB camera", async () =>
-					{
-						await _switcher.CheckAsync();
-						_holder.UpdateIcon(_switcher.RemovableCameraExists);
-						await UpdateWindow();
-					}),
-					(ToolStripItemType.Button, "Enable built-in camera", async () =>
-					{
-						await _switcher.EnableAsync();
-						await UpdateWindow();
-					}),
-					(ToolStripItemType.Button, "Disable built-in camera", async () =>
-					{
-						await _switcher.DisableAsync();
-						await UpdateWindow();
-					}),
-					(ToolStripItemType.Separator, null, null),
-					(ToolStripItemType.Button,"Close", async () =>
-					{
-						await _switcher.EnableAsync();
-						this.Shutdown();
-					})
-				});
-			_holder.UpdateIcon(_switcher.RemovableCameraExists);
-
-			_holder.UsbDeviceChanged += async (_, e) =>
+			_watcher = new DeviceUsbWatcher();
+			_watcher.UsbDeviceChanged += async (_, e) =>
 			{
 				await _switcher.CheckAsync(e.deviceName, e.exists);
-				_holder.UpdateIcon(_switcher.RemovableCameraExists);
-				await UpdateWindow();
+
+				if (!IsService)
+				{
+					_holder?.UpdateIcon(_switcher.RemovableCameraExists);
+					await UpdateWindow();
+				}
 			};
 
-			if (!_settings.IsLoaded)
-				ShowWindow();
+			if (!IsService)
+			{
+				_holder = new NotifyIconHolder(
+					new[]
+					{
+						"pack://application:,,,/HelloSwitcher;component/Resources/Disconnected.ico",
+						"pack://application:,,,/HelloSwitcher;component/Resources/Connected.ico",
+					},
+					"Hello Switcher",
+					new[]
+					{
+						(ToolStripItemType.Label, "Hello Switcher", (Action)null), // (Action) is necessary to indicate the type.
+						(ToolStripItemType.Separator, null, null),
+						(ToolStripItemType.Button, "Open settings", () => ShowWindow()),
+						(ToolStripItemType.Separator, null, null),
+						(ToolStripItemType.Button, "Re-check USB camera", async () =>
+						{
+							await _switcher.CheckAsync();
+							_holder.UpdateIcon(_switcher.RemovableCameraExists);
+							await UpdateWindow();
+						}),
+						(ToolStripItemType.Button, "Enable built-in camera", async () =>
+						{
+							await _switcher.EnableAsync();
+							await UpdateWindow();
+						}),
+						(ToolStripItemType.Button, "Disable built-in camera", async () =>
+						{
+							await _switcher.DisableAsync();
+							await UpdateWindow();
+						}),
+						(ToolStripItemType.Separator, null, null),
+						(ToolStripItemType.Button,"Close", async () =>
+						{
+							await _switcher.EnableAsync();
+							this.Shutdown();
+						})
+					});
+				_holder.UpdateIcon(_switcher.RemovableCameraExists);
+
+				if (!_settings.IsLoaded)
+					ShowWindow();
+			}
 		}
 
 		private void ShowWindow()
@@ -124,6 +127,7 @@ namespace HelloSwitcher
 
 		protected override void OnExit(ExitEventArgs e)
 		{
+			_watcher?.Dispose();
 			_holder?.Dispose();
 
 			base.OnExit(e);
