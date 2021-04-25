@@ -35,7 +35,7 @@ namespace HelloSwitcher.Models
 
 		#region Load/Save
 
-		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), nameof(HelloSwitcher));
+		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), nameof(HelloSwitcher));
 		private static string FilePath => Path.Combine(FolderPath, "settings.txt");
 
 		private const char Separator = '=';

@@ -9,7 +9,7 @@ namespace HelloSwitcher.Models
 {
 	internal static class Logger
 	{
-		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), nameof(HelloSwitcher));
+		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), nameof(HelloSwitcher));
 		private static string OperationFilePath => Path.Combine(FolderPath, "operation.txt");
 		private static string ExceptionFilePath => Path.Combine(FolderPath, "exception.txt");
 
