@@ -27,11 +27,11 @@ namespace HelloSwitcher.Models
 
 		public Guid RemovableCameraClassGuid { get; set; }
 
-		internal bool IsLoaded { get; private set; }
+		public bool IsLoaded { get; private set; }
 
-		internal bool IsFilled => !string.IsNullOrWhiteSpace(BuiltInCameraDeviceInstanceId)
-							   && !string.IsNullOrWhiteSpace(RemovableCameraDeviceInstanceId)
-							   && (RemovableCameraClassGuid != default);
+		public bool IsFilled => !string.IsNullOrWhiteSpace(BuiltInCameraDeviceInstanceId)
+							 && !string.IsNullOrWhiteSpace(RemovableCameraDeviceInstanceId)
+							 && (RemovableCameraClassGuid != default);
 
 		#region Load/Save
 
@@ -76,9 +76,6 @@ namespace HelloSwitcher.Models
 			}
 
 			IsLoaded = !properties.Any();
-
-			if (App.IsService)
-				Logger.RecordOperation($"{nameof(LoadAsync)} {nameof(IsLoaded)}:[{IsLoaded}]");
 		}
 
 		public async Task SaveAsync()

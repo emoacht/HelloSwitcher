@@ -7,7 +7,7 @@ using System.Windows.Forms;
 
 namespace HelloSwitcher.Models
 {
-	internal class DeviceUsbWatcher : IDisposable
+	public class DeviceUsbWatcher : IDisposable
 	{
 		#region Type
 

@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace HelloSwitcher.Models
 {
-	internal static class Logger
+	public static class Logger
 	{
 		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), nameof(HelloSwitcher));
 		private static string OperationFilePath => Path.Combine(FolderPath, "operation.txt");

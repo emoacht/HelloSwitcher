@@ -5,9 +5,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using HelloSwitcher.Models;
-
-namespace HelloSwitcher
+namespace HelloSwitcher.Models
 {
 	public class DeviceSwitcher
 	{
@@ -27,9 +25,6 @@ namespace HelloSwitcher
 
 		public async Task CheckAsync(string deviceName, bool exists)
 		{
-			if (App.IsService)
-				Logger.RecordOperation($"{nameof(CheckAsync)} {nameof(deviceName)}:[{deviceName}] {nameof(exists)}:[{exists}]");
-
 			lock (_lock)
 			{
 				if ((deviceName is not null) && (_settings.RemovableCameraVidPid?.IsValid is true))
@@ -41,9 +36,6 @@ namespace HelloSwitcher
 				{
 					exists = DeviceUsbHelper.UsbCameraExists(_settings.RemovableCameraClassGuid, _settings.RemovableCameraDeviceInstanceId);
 				}
-
-				if (App.IsService)
-					Logger.RecordOperation($"{nameof(CheckAsync)} {nameof(_removableCameraExists)}:[{_removableCameraExists}] vs {nameof(exists)}:[{exists}]");
 
 				if (_removableCameraExists == exists)
 					return;

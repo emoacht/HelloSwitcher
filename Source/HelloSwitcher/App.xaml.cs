@@ -29,9 +29,6 @@ namespace HelloSwitcher
 			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordException(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordException(e.ExceptionObject);
 
-			if (IsService)
-				Logger.RecordOperation($"Start", false);
-
 			_settings = new Settings();
 			await _settings.LoadAsync();
 

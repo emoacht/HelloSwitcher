@@ -11,7 +11,7 @@ namespace HelloSwitcher.Models
 	/// <summary>
 	/// Utility methods for USB devices by Device Information Functions
 	/// </summary>
-	internal static class DeviceUsbHelper
+	public static class DeviceUsbHelper
 	{
 		#region Win32
 

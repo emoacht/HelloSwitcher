@@ -15,7 +15,7 @@ namespace HelloSwitcher.Models
 	/// <remarks>
 	/// https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/pnputil
 	/// </remarks>
-	internal static class PnpUtility
+	public static class PnpUtility
 	{
 		public static Task EnableAsync(string deviceInstanceId) => ExecuteAsync($@"/enable-device ""{deviceInstanceId}""");
 		public static Task DisableAsync(string deviceInstanceId) => ExecuteAsync($@"/disable-device ""{deviceInstanceId}""");
@@ -27,8 +27,6 @@ namespace HelloSwitcher.Models
 			foreach (var line in lines)
 				Debug.WriteLine($"RE {line}");
 #endif
-			if (App.IsService)
-				Logger.RecordOperation($"{nameof(ExecuteAsync)}, {nameof(arguments)}:[{arguments}]{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
 		}
 
 		#region Type
@@ -36,7 +34,7 @@ namespace HelloSwitcher.Models
 		public class CameraItem
 		{
 			internal string ClassName { get; }
-			internal Guid ClassGuid { get; }
+			public Guid ClassGuid { get; }
 
 			public string DeviceInstanceId { get; }
 			public string Description { get; }
@@ -120,7 +118,7 @@ namespace HelloSwitcher.Models
 			{
 				StartInfo =
 				{
-					FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "pnputil.exe"),
+					FileName = Path.Combine(Environment.SystemDirectory, "pnputil.exe"),
 					Arguments = arguments,
 					CreateNoWindow = true,
 					UseShellExecute = false,
