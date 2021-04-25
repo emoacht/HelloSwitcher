@@ -7,11 +7,23 @@ using System.Threading.Tasks;
 
 namespace HelloSwitcher.Models
 {
-	public static class Logger
+	public class Logger
 	{
 		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), nameof(HelloSwitcher));
-		private static string OperationFilePath => Path.Combine(FolderPath, "operation.txt");
-		private static string ExceptionFilePath => Path.Combine(FolderPath, "exception.txt");
+
+		private readonly string _operationFilePath;
+		private readonly string _exceptionFilePath;
+
+		public Logger(string operationFileName, string exceptionFileName)
+		{
+			if (string.IsNullOrWhiteSpace(operationFileName))
+				throw new ArgumentNullException(nameof(operationFileName));
+			if (string.IsNullOrWhiteSpace(exceptionFileName))
+				throw new ArgumentNullException(nameof(exceptionFileName));
+
+			_operationFilePath = Path.Combine(FolderPath, operationFileName);
+			_exceptionFilePath = Path.Combine(FolderPath, exceptionFileName);
+		}
 
 		private static void EnsureFolder()
 		{
@@ -19,19 +31,19 @@ namespace HelloSwitcher.Models
 				Directory.CreateDirectory(FolderPath);
 		}
 
-		public static void RecordOperation(string content, bool append = true)
+		public void RecordOperation(string content, bool append = true)
 		{
 			EnsureFolder();
 
-			using var writer = new StreamWriter(OperationFilePath, append, Encoding.UTF8);
+			using var writer = new StreamWriter(_operationFilePath, append, Encoding.UTF8);
 			writer.Write($"[{DateTime.Now}]{Environment.NewLine}{content}{Environment.NewLine}{Environment.NewLine}");
 		}
 
-		public static void RecordException(object exception)
+		public void RecordException(object exception)
 		{
 			EnsureFolder();
 
-			File.WriteAllText(ExceptionFilePath, $"[{DateTime.Now}]{Environment.NewLine}{exception}");
+			File.WriteAllText(_exceptionFilePath, $"[{DateTime.Now}]{Environment.NewLine}{exception}");
 		}
 	}
 }

@@ -21,6 +21,13 @@ namespace HelloSwitcher
 
 		internal static bool IsInteractive { get; } = Environment.UserInteractive;
 
+		internal Logger Logger { get; }
+
+		public App() : base()
+		{
+			Logger = new Logger("operation.log", "exception.log");
+		}
+
 		protected override async void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
