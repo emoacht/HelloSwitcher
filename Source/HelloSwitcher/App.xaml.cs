@@ -19,7 +19,7 @@ namespace HelloSwitcher
 		private DeviceUsbWatcher _watcher;
 		private NotifyIconHolder _holder;
 
-		internal static bool IsService { get; } = !Environment.UserInteractive;
+		internal static bool IsInteractive { get; } = Environment.UserInteractive;
 
 		protected override async void OnStartup(StartupEventArgs e)
 		{
@@ -40,14 +40,14 @@ namespace HelloSwitcher
 			{
 				await _switcher.CheckAsync(e.deviceName, e.exists);
 
-				if (!IsService)
+				if (IsInteractive)
 				{
 					_holder?.UpdateIcon(_switcher.RemovableCameraExists);
 					await UpdateWindow();
 				}
 			};
 
-			if (!IsService)
+			if (IsInteractive)
 			{
 				_holder = new NotifyIconHolder(
 					new[]
