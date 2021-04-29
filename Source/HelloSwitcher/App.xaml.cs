@@ -14,9 +14,9 @@ namespace HelloSwitcher
 {
 	public partial class App : Application
 	{
+		internal Settings Settings { get; }
 		internal Logger Logger { get; }
 
-		private Settings _settings;
 		private DeviceSwitcher _switcher;
 		private DeviceUsbWindowWatcher _watcher;
 		private NotifyIconHolder _holder;
@@ -29,6 +29,7 @@ namespace HelloSwitcher
 			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordError(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordError(e.ExceptionObject);
 
+			Settings = new Settings();
 			Logger = new Logger("operation.log", "error.log");
 		}
 
@@ -38,12 +39,11 @@ namespace HelloSwitcher
 
 			Logger.RecordOperation("Start");
 
-			_settings = new Settings();
-			await _settings.LoadAsync();
+			await Settings.LoadAsync();
 
-			Logger.RecordOperation($"Settings IsLoaded: {_settings.IsLoaded}");
+			Logger.RecordOperation($"Settings IsLoaded: {Settings.IsLoaded}");
 
-			_switcher = new DeviceSwitcher(_settings, Logger);
+			_switcher = new DeviceSwitcher(Settings, Logger);
 			await _switcher.CheckAsync("Initial Check");
 
 			_watcher = new DeviceUsbWindowWatcher();
@@ -98,7 +98,7 @@ namespace HelloSwitcher
 					});
 				_holder.UpdateIcon(_switcher.RemovableCameraExists);
 
-				if (!_settings.IsLoaded)
+				if (!Settings.IsLoaded)
 					ShowWindow();
 			}
 		}
@@ -112,7 +112,7 @@ namespace HelloSwitcher
 				return;
 			}
 
-			this.MainWindow = new SettingsWindow(_settings);
+			this.MainWindow = new SettingsWindow(this);
 			this.MainWindow.Closed += OnClosed;
 			this.MainWindow.Show();
 

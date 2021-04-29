@@ -30,11 +30,12 @@ namespace HelloSwitcher.ViewModels
 		}
 		private bool _canApply;
 
-		private readonly Settings _settings;
+		private readonly App _app;
+		private Settings Settings => _app.Settings;
 
-		public SettingsWindowViewModel(Settings settings)
+		public SettingsWindowViewModel(App app)
 		{
-			this._settings = settings ?? throw new ArgumentNullException(nameof(settings));
+			this._app = app ?? throw new ArgumentNullException(nameof(app));
 
 			CamerasView = new ListCollectionView(Cameras);
 			CamerasView.SortDescriptions.Add(new SortDescription(nameof(CameraViewModel.IsRemovable), ListSortDirection.Ascending));
@@ -47,8 +48,8 @@ namespace HelloSwitcher.ViewModels
 
 			void OnChanged()
 			{
-				CanApply = Cameras.Any(x => x.IsBuiltInCameraSelected)
-						&& Cameras.Any(x => x.IsRemovableCameraSelected);
+				CanApply = (Cameras.Any(x => x.IsBuiltInCameraSelected) || Settings.IsBuiltInCameraFilled)
+						&& (Cameras.Any(x => x.IsRemovableCameraSelected) || Settings.IsRemovableCameraFilled);
 			}
 		}
 
@@ -87,18 +88,18 @@ namespace HelloSwitcher.ViewModels
 			}
 
 			// Set selected cameras.
-			var builtInCamera = Cameras.FirstOrDefault(x => string.Equals(x.DeviceInstanceId, _settings.BuiltInCameraDeviceInstanceId, StringComparison.Ordinal));
+			var builtInCamera = Cameras.FirstOrDefault(x => string.Equals(x.DeviceInstanceId, Settings.BuiltInCameraDeviceInstanceId, StringComparison.Ordinal));
 			if (builtInCamera is not null)
 				builtInCamera.IsBuiltInCameraSelected = true;
 
-			var removableCamera = Cameras.FirstOrDefault(x => string.Equals(x.DeviceInstanceId, _settings.RemovableCameraDeviceInstanceId, StringComparison.Ordinal));
+			var removableCamera = Cameras.FirstOrDefault(x => string.Equals(x.DeviceInstanceId, Settings.RemovableCameraDeviceInstanceId, StringComparison.Ordinal));
 			if (removableCamera is not null)
 				removableCamera.IsRemovableCameraSelected = true;
 
 			// Update operation status.
 			string GetStatus()
 			{
-				if (!_settings.IsFilled)
+				if (!Settings.IsFilled)
 					return "Settings is required";
 
 				if (builtInCamera is null)
@@ -115,18 +116,27 @@ namespace HelloSwitcher.ViewModels
 
 		public async Task ApplyAsync()
 		{
-			var builtInCamera = Cameras.FirstOrDefault(x => x.IsBuiltInCameraSelected);
-			if (builtInCamera is not null)
-				_settings.BuiltInCameraDeviceInstanceId = builtInCamera.DeviceInstanceId;
+			var isUpdated = false;
 
-			var removableCamera = Cameras.FirstOrDefault(x => x.IsRemovableCameraSelected);
-			if (removableCamera is not null)
+			var builtInCamera = Cameras.FirstOrDefault(x => x.IsBuiltInCameraSelected);
+			if ((builtInCamera is not null) &&
+				(Settings.BuiltInCameraDeviceInstanceId != builtInCamera.DeviceInstanceId))
 			{
-				_settings.RemovableCameraDeviceInstanceId = removableCamera.DeviceInstanceId;
-				_settings.RemovableCameraClassGuid = removableCamera.ClassGuid;
+				Settings.BuiltInCameraDeviceInstanceId = builtInCamera.DeviceInstanceId;
+				isUpdated = true;
 			}
 
-			await _settings.SaveAsync();
+			var removableCamera = Cameras.FirstOrDefault(x => x.IsRemovableCameraSelected);
+			if ((removableCamera is not null) &&
+				(Settings.RemovableCameraDeviceInstanceId != removableCamera.DeviceInstanceId))
+			{
+				Settings.RemovableCameraDeviceInstanceId = removableCamera.DeviceInstanceId;
+				Settings.RemovableCameraClassGuid = removableCamera.ClassGuid;
+				isUpdated = true;
+			}
+
+			if (isUpdated)
+				await Settings.SaveAsync();
 		}
 
 		#region IDisposable

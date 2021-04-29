@@ -10,7 +10,15 @@ namespace HelloSwitcher.Models
 {
 	public class Settings
 	{
+		#region Built-in camera
+
 		public string BuiltInCameraDeviceInstanceId { get; set; }
+
+		public bool IsBuiltInCameraFilled => !string.IsNullOrWhiteSpace(BuiltInCameraDeviceInstanceId);
+
+		#endregion
+
+		#region Removable camera
 
 		public string RemovableCameraDeviceInstanceId
 		{
@@ -27,11 +35,15 @@ namespace HelloSwitcher.Models
 
 		public Guid RemovableCameraClassGuid { get; set; }
 
+		public bool IsRemovableCameraFilled => !string.IsNullOrWhiteSpace(RemovableCameraDeviceInstanceId)
+											&& (RemovableCameraClassGuid != default);
+
+		#endregion
+
 		public bool IsLoaded { get; private set; }
 
-		public bool IsFilled => !string.IsNullOrWhiteSpace(BuiltInCameraDeviceInstanceId)
-							 && !string.IsNullOrWhiteSpace(RemovableCameraDeviceInstanceId)
-							 && (RemovableCameraClassGuid != default);
+		public bool IsFilled => IsBuiltInCameraFilled
+							 && IsRemovableCameraFilled;
 
 		#region Load/Save
 
