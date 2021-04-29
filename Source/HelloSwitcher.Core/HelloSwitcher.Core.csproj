@@ -31,21 +31,21 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.CSharp" />
     <Reference Include="System" />
     <Reference Include="System.Core" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Management" />
+    <Reference Include="System.ServiceProcess" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-    <Reference Include="Microsoft.CSharp" />
-    <Reference Include="System.Data" />
-    <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Models\DeviceSwitcher.cs" />
     <Compile Include="Models\DeviceUsbHelper.cs" />
-    <Compile Include="Models\DeviceUsbWatcher.cs" />
+    <Compile Include="Models\DeviceUsbServiceWatcher.cs" />
+    <Compile Include="Models\DeviceUsbWindowWatcher.cs" />
     <Compile Include="Models\Logger.cs" />
     <Compile Include="Models\PnpUtility.cs" />
     <Compile Include="Models\Settings.cs" />

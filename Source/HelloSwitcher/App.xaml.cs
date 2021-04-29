@@ -18,7 +18,7 @@ namespace HelloSwitcher
 
 		private Settings _settings;
 		private DeviceSwitcher _switcher;
-		private DeviceUsbWatcher _watcher;
+		private DeviceUsbWindowWatcher _watcher;
 		private NotifyIconHolder _holder;
 
 		internal static bool IsInteractive { get; } = Environment.UserInteractive;
@@ -46,7 +46,7 @@ namespace HelloSwitcher
 			_switcher = new DeviceSwitcher(_settings, Logger);
 			await _switcher.CheckAsync("Initial Check");
 
-			_watcher = new DeviceUsbWatcher();
+			_watcher = new DeviceUsbWindowWatcher();
 			_watcher.UsbDeviceChanged += async (_, e) =>
 			{
 				await _switcher.CheckAsync("Device Changed Check", e.deviceName, e.exists);

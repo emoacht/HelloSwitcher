@@ -7,15 +7,15 @@ using System.Windows.Forms;
 
 namespace HelloSwitcher.Models
 {
-	public class DeviceUsbWatcher : IDisposable
+	public class DeviceUsbWindowWatcher : IDisposable
 	{
 		#region Type
 
 		private class MessageOnlyWindowListener : NativeWindow
 		{
-			private readonly DeviceUsbWatcher _container;
+			private readonly DeviceUsbWindowWatcher _container;
 
-			public MessageOnlyWindowListener(DeviceUsbWatcher container)
+			public MessageOnlyWindowListener(DeviceUsbWindowWatcher container)
 			{
 				this._container = container;
 
@@ -45,12 +45,12 @@ namespace HelloSwitcher.Models
 		#endregion
 
 		private readonly MessageOnlyWindowListener _listener;
+		private readonly IntPtr _notificationHandle;
 
-		public DeviceUsbWatcher()
+		public DeviceUsbWindowWatcher()
 		{
 			_listener = new MessageOnlyWindowListener(this);
-
-			DeviceUsbHelper.RegisterUsbDeviceNotification(_listener.Handle);
+			_notificationHandle = DeviceUsbHelper.RegisterWindowNotification(_listener.Handle);
 		}
 
 		public event EventHandler<(string deviceName, bool exists)> UsbDeviceChanged;
@@ -62,12 +62,12 @@ namespace HelloSwitcher.Models
 				case DeviceUsbHelper.WM_DEVICECHANGE:
 					switch (m.WParam.ToInt32())
 					{
-						case DeviceUsbHelper.DBT_DEVICEREMOVECOMPLETE:
-							RaiseUsbDeviceChanged(m.LParam, false);
-							break;
-
 						case DeviceUsbHelper.DBT_DEVICEARRIVAL:
 							RaiseUsbDeviceChanged(m.LParam, true);
+							break;
+
+						case DeviceUsbHelper.DBT_DEVICEREMOVECOMPLETE:
+							RaiseUsbDeviceChanged(m.LParam, false);
 							break;
 					}
 					break;
@@ -98,7 +98,7 @@ namespace HelloSwitcher.Models
 			if (disposing)
 			{
 				// Free any other managed objects here.
-				DeviceUsbHelper.UnregisterUsbDeviceNotification();
+				DeviceUsbHelper.UnregisterNotification(_notificationHandle);
 				_listener?.Close();
 			}
 
