@@ -25,16 +25,16 @@ namespace HelloSwitcher
 
 		public App() : base()
 		{
+			DispatcherUnhandledException += (_, e) => Logger.RecordError(e.Exception);
+			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordError(e.Exception);
+			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordError(e.ExceptionObject);
+
 			Logger = new Logger("operation.log", "error.log");
 		}
 
 		protected override async void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
-
-			DispatcherUnhandledException += (_, e) => Logger.RecordError(e.Exception);
-			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordError(e.Exception);
-			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordError(e.ExceptionObject);
 
 			Logger.RecordOperation("Start");
 
