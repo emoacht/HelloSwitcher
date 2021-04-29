@@ -42,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Helper\Sample.cs" />
     <Compile Include="Models\DeviceSwitcher.cs" />
     <Compile Include="Models\DeviceUsbHelper.cs" />
     <Compile Include="Models\DeviceUsbServiceWatcher.cs" />
