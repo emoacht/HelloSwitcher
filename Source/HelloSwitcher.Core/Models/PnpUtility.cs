@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HelloSwitcher.Models
@@ -17,12 +18,12 @@ namespace HelloSwitcher.Models
 	/// </remarks>
 	public static class PnpUtility
 	{
-		public static Task<string[]> EnableAsync(string deviceInstanceId) => ExecuteAsync($@"/enable-device ""{deviceInstanceId}""");
-		public static Task<string[]> DisableAsync(string deviceInstanceId) => ExecuteAsync($@"/disable-device ""{deviceInstanceId}""");
+		public static Task<string[]> EnableAsync(string deviceInstanceId, CancellationToken cancellationToken = default) => ExecuteAsync($@"/enable-device ""{deviceInstanceId}""", cancellationToken);
+		public static Task<string[]> DisableAsync(string deviceInstanceId, CancellationToken cancellationToken = default) => ExecuteAsync($@"/disable-device ""{deviceInstanceId}""", cancellationToken);
 
-		private static async Task<string[]> ExecuteAsync(string arguments)
+		private static async Task<string[]> ExecuteAsync(string arguments, CancellationToken cancellationToken)
 		{
-			var lines = await ExecuteDirectAsync(arguments);
+			var lines = await ExecuteDirectAsync(arguments, cancellationToken);
 #if DEBUG
 			foreach (var line in lines)
 				Debug.WriteLine($"RE {line}");
@@ -77,15 +78,15 @@ namespace HelloSwitcher.Models
 
 		#endregion
 
-		public static async Task<CameraItem[]> GetCamerasAsync()
+		public static async Task<CameraItem[]> GetCamerasAsync(CancellationToken cancellationToken = default)
 		{
-			return (await GetCamerasAsync("Camera"))
-				.Concat(await GetCamerasAsync("Image")).ToArray();
+			return (await GetCamerasAsync("Camera", cancellationToken))
+				.Concat(await GetCamerasAsync("Image", cancellationToken)).ToArray();
 		}
 
-		public static async Task<CameraItem[]> GetCamerasAsync(string className)
+		public static async Task<CameraItem[]> GetCamerasAsync(string className, CancellationToken cancellationToken = default)
 		{
-			var lines = await ExecuteCommandLineAsync($"/enum-devices /class {className} /connected");
+			var lines = await ExecuteCommandLineAsync($"/enum-devices /class {className} /connected", cancellationToken);
 
 			IEnumerable<CameraItem> Enumerate()
 			{
@@ -111,7 +112,7 @@ namespace HelloSwitcher.Models
 			return Enumerate().ToArray();
 		}
 
-		private static async Task<string[]> ExecuteDirectAsync(string arguments)
+		private static async Task<string[]> ExecuteDirectAsync(string arguments, CancellationToken cancellationToken)
 		{
 			using var canceller = new RedirectionCanceller();
 
@@ -136,6 +137,8 @@ namespace HelloSwitcher.Models
 			void received(object sender, DataReceivedEventArgs e) => outputLines.Add(e.Data);
 			void exited(object sender, EventArgs e) => tcs.SetResult(true);
 
+			using var registration = cancellationToken.Register(() => tcs.TrySetCanceled());
+
 			try
 			{
 				proc.OutputDataReceived += received;
@@ -155,7 +158,7 @@ namespace HelloSwitcher.Models
 			}
 		}
 
-		private static async Task<string[]> ExecuteCommandLineAsync(string arguments)
+		private static async Task<string[]> ExecuteCommandLineAsync(string arguments, CancellationToken cancellationToken)
 		{
 			using var canceller = new RedirectionCanceller();
 
@@ -185,6 +188,8 @@ namespace HelloSwitcher.Models
 
 			void received(object sender, DataReceivedEventArgs e) => outputLines.Add(e.Data);
 			void exited(object sender, EventArgs e) => tcs.SetResult(true);
+
+			using var registration = cancellationToken.Register(() => tcs.TrySetCanceled());
 
 			try
 			{

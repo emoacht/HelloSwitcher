@@ -23,9 +23,9 @@ namespace HelloSwitcher.Models
 
 		private readonly object _lock = new object();
 
-		public Task CheckAsync(string actionName) => CheckAsync(actionName, null, false);
+		public Task CheckAsync(string actionName, CancellationToken cancellationToken = default) => CheckAsync(actionName, null, false, cancellationToken);
 
-		public async Task CheckAsync(string actionName, string deviceName, bool exists)
+		public async Task CheckAsync(string actionName, string deviceName, bool exists, CancellationToken cancellationToken = default)
 		{
 			var result = new List<string> { actionName };
 			void RecordResult() => _logger?.RecordOperation(string.Join(Environment.NewLine, result));
@@ -62,10 +62,16 @@ namespace HelloSwitcher.Models
 				_removableCameraExists = exists;
 			}
 
+			if (cancellationToken.IsCancellationRequested)
+			{
+				RecordResult();
+				return;
+			}
+
 			if (!_removableCameraExists.Value)
-				result.AddRange(await PnpUtility.EnableAsync(_settings.BuiltInCameraDeviceInstanceId));
+				result.AddRange(await PnpUtility.EnableAsync(_settings.BuiltInCameraDeviceInstanceId, cancellationToken));
 			else
-				result.AddRange(await PnpUtility.DisableAsync(_settings.BuiltInCameraDeviceInstanceId));
+				result.AddRange(await PnpUtility.DisableAsync(_settings.BuiltInCameraDeviceInstanceId, cancellationToken));
 
 			RecordResult();
 		}
