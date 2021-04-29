@@ -36,16 +36,20 @@ namespace HelloSwitcher
 			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordError(e.Exception);
 			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordError(e.ExceptionObject);
 
+			Logger.RecordOperation("Start");
+
 			_settings = new Settings();
 			await _settings.LoadAsync();
 
-			_switcher = new DeviceSwitcher(_settings);
-			await _switcher.CheckAsync();
+			Logger.RecordOperation($"Settings IsLoaded: {_settings.IsLoaded}");
+
+			_switcher = new DeviceSwitcher(_settings, Logger);
+			await _switcher.CheckAsync("Initial Check");
 
 			_watcher = new DeviceUsbWatcher();
 			_watcher.UsbDeviceChanged += async (_, e) =>
 			{
-				await _switcher.CheckAsync(e.deviceName, e.exists);
+				await _switcher.CheckAsync("Device Changed Check", e.deviceName, e.exists);
 
 				if (IsInteractive)
 				{
@@ -71,7 +75,7 @@ namespace HelloSwitcher
 						(ToolStripItemType.Separator, null, null),
 						(ToolStripItemType.Button, "Re-check USB camera", async () =>
 						{
-							await _switcher.CheckAsync();
+							await _switcher.CheckAsync("Manual Check");
 							_holder.UpdateIcon(_switcher.RemovableCameraExists);
 							await UpdateWindow();
 						}),
@@ -115,7 +119,7 @@ namespace HelloSwitcher
 			async void OnClosed(object sender, EventArgs e)
 			{
 				this.MainWindow = null;
-				await _switcher.CheckAsync();
+				await _switcher.CheckAsync("Settings Changed Check");
 				_holder.UpdateIcon(_switcher.RemovableCameraExists);
 			}
 		}

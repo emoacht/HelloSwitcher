@@ -17,16 +17,17 @@ namespace HelloSwitcher.Models
 	/// </remarks>
 	public static class PnpUtility
 	{
-		public static Task EnableAsync(string deviceInstanceId) => ExecuteAsync($@"/enable-device ""{deviceInstanceId}""");
-		public static Task DisableAsync(string deviceInstanceId) => ExecuteAsync($@"/disable-device ""{deviceInstanceId}""");
+		public static Task<string[]> EnableAsync(string deviceInstanceId) => ExecuteAsync($@"/enable-device ""{deviceInstanceId}""");
+		public static Task<string[]> DisableAsync(string deviceInstanceId) => ExecuteAsync($@"/disable-device ""{deviceInstanceId}""");
 
-		private static async Task ExecuteAsync(string arguments)
+		private static async Task<string[]> ExecuteAsync(string arguments)
 		{
 			var lines = await ExecuteDirectAsync(arguments);
 #if DEBUG
 			foreach (var line in lines)
 				Debug.WriteLine($"RE {line}");
 #endif
+			return lines;
 		}
 
 		#region Type
