@@ -14,6 +14,8 @@ namespace HelloSwitcher
 {
 	public partial class App : Application
 	{
+		internal Logger Logger { get; }
+
 		private Settings _settings;
 		private DeviceSwitcher _switcher;
 		private DeviceUsbWatcher _watcher;
@@ -21,20 +23,18 @@ namespace HelloSwitcher
 
 		internal static bool IsInteractive { get; } = Environment.UserInteractive;
 
-		internal Logger Logger { get; }
-
 		public App() : base()
 		{
-			Logger = new Logger("operation.log", "exception.log");
+			Logger = new Logger("operation.log", "error.log");
 		}
 
 		protected override async void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
 
-			DispatcherUnhandledException += (_, e) => Logger.RecordException(e.Exception);
-			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordException(e.Exception);
-			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordException(e.ExceptionObject);
+			DispatcherUnhandledException += (_, e) => Logger.RecordError(e.Exception);
+			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordError(e.Exception);
+			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordError(e.ExceptionObject);
 
 			_settings = new Settings();
 			await _settings.LoadAsync();
