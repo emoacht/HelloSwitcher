@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
+  <Product Id="*" Name="Hello Switcher" Manufacturer="emoacht" Version="1.0.0"
+           Language="1033" Codepage="1252" UpgradeCode="{9043B009-DD4C-460D-9295-5B312A5E8948}">
+    <Package Id="*" InstallerVersion="500" Compressed="yes"
+             InstallScope="perMachine" InstallPrivileges="elevated"
+             Description="Installer for Hello Switcher"/>
+
+    <MajorUpgrade DowngradeErrorMessage="A newer version of [ProductName] is already installed."/>
+    <MediaTemplate EmbedCab="yes"/>
+
+    <!-- UI -->
+    <Property Id="WIXUI_INSTALLDIR" Value="INSTALLDIR"/>
+    <UI>
+      <UIRef Id="WixUI_InstallDir"/>
+      <UIRef Id="WixUI_ErrorProgressText"/>
+
+      <!-- Skip License Agreement Dialog -->
+      <Publish Dialog="WelcomeDlg" Control="Next" Event="NewDialog" Value="InstallDirDlg" Order="2">1</Publish>
+      <Publish Dialog="InstallDirDlg" Control="Back" Event="NewDialog" Value="WelcomeDlg" Order="2">1</Publish>
+    </UI>
+    <WixVariable Id="WixUIBannerBmp" Value="Resources\banner.png"/>
+    <WixVariable Id="WixUIDialogBmp" Value="Resources\dialog.png"/>
+
+    <Directory Id="TARGETDIR" Name="SourceDir">
+      <!-- Program Files -->
+      <Directory Id="ProgramFilesFolder">
+        <Directory Id="INSTALLDIR" Name="$(var.HelloSwitcher.ProjectName)"/>
+      </Directory>
+
+      <!-- Program Menu -->
+      <Directory Id="ProgramMenuFolder"/>
+
+      <!-- Common AppData -->
+      <Directory Id="CommonAppDataFolder">
+        <Directory Id="ApplicationCommonAppDataFolder" Name="$(var.HelloSwitcher.ProjectName)"/>
+      </Directory>
+    </Directory>
+
+    <DirectoryRef Id="INSTALLDIR">
+      <Component Id="MainExecutable" Guid="{CC02306D-3B7D-4A1B-8A6E-A49D245B59B0}">
+        <File Id="MainExecutable"
+              Source="$(var.HelloSwitcher.TargetPath)" Name="$(var.HelloSwitcher.TargetFileName)" KeyPath="yes"/>
+      </Component>
+
+      <Component Id="BehaviorsLibrary" Guid="{D21BCBC4-1E50-462C-A878-AD7AEB8ADF42}">
+        <File Id="BehaviorsLibrary"
+              Source="$(var.HelloSwitcher.TargetDir)" Name="Microsoft.Xaml.Behaviors.dll" KeyPath="yes"/>
+      </Component>
+
+      <Component Id="CoreLibrary" Guid="{B44779A2-925F-4F75-BB3A-351856A21DD1}">
+        <File Id="CoreLibrary"
+              Source="$(var.HelloSwitcher.TargetDir)" Name="$(var.HelloSwitcher.TargetName).Core.dll" KeyPath="yes"/>
+      </Component>
+
+      <Component Id="ServiceExecutable" Guid="{7D3E895B-90A0-4DBF-8E68-D2190B8696D9}">
+        <File Id="ServiceExecutable"
+              Source="$(var.HelloSwitcher.TargetDir)" Name="$(var.HelloSwitcher.TargetName).Service.exe" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Shortcut in Program Menu -->
+    <DirectoryRef Id="ProgramMenuFolder">
+      <Component Id="ApplicationShortcut" Guid="{0DE8B585-52BF-477E-93D7-0FA6A11B785E}">
+        <Shortcut Id="ApplicationProgramMenuShortcut" Name="Hello Switcher"
+                  Target="[#MainExecutable]" WorkingDirectory="INSTALLDIR"
+                  Icon="AppIcon.exe" IconIndex="0">
+          <ShortcutProperty Key="System.AppUserModel.ID" Value="[ProductName]"/>
+        </Shortcut>
+        <RegistryValue Root="HKCU" Key="Software\[ProductName]"
+                       Name="ApplicationShortcut" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <!-- Working Folder in Common AppData -->
+    <DirectoryRef Id="ApplicationCommonAppDataFolder">
+      <Component Id="ApplicationWorkingFolder" Guid="{B98FBE95-351B-491E-B4D2-BB3571164B92}">
+        <RemoveFile Id="ApplicationCommonAppDataFiles" Directory="ApplicationCommonAppDataFolder" Name="*.*" On="uninstall"/>
+        <RemoveFolder Id="ApplicationCommonAppDataFolder" On="uninstall"/>
+        <RegistryValue Root="HKCU" Key="Software\[ProductName]"
+                       Name="ApplicationWorkingFolder" Type="integer" Value="1" KeyPath="yes"/>
+      </Component>
+    </DirectoryRef>
+
+    <Icon Id="AppIcon.exe" SourceFile="$(var.HelloSwitcher.TargetPath)"/>
+    <Property Id="ARPPRODUCTICON" Value="AppIcon.exe"/>
+
+    <Feature Id="ProductFeature" Level="1">
+      <ComponentRef Id="MainExecutable"/>
+      <ComponentRef Id="BehaviorsLibrary"/>
+      <ComponentRef Id="CoreLibrary"/>
+      <ComponentRef Id="ServiceExecutable"/>
+      <ComponentRef Id="ApplicationShortcut"/>
+      <ComponentRef Id="ApplicationWorkingFolder"/>
+    </Feature>
+
+    <!-- Uninstall Service -->
+    <CustomAction Id="UninstallService" Directory="TARGETDIR" Execute="deferred" Impersonate="no" Return="ignore"
+                  ExeCommand="[INSTALLDIR]$(var.HelloSwitcher.TargetFileName) /uninstall"/>
+    <InstallExecuteSequence>
+      <Custom Action="UninstallService" Before="RemoveFiles">(NOT UPGRADINGPRODUCTCODE) AND (REMOVE="ALL")</Custom>
+    </InstallExecuteSequence>
+  </Product>
+</Wix>
