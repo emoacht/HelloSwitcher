@@ -3,11 +3,13 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
 using HelloSwitcher.Models;
+using HelloSwitcher.Service;
 using HelloSwitcher.Views;
 
 namespace HelloSwitcher
@@ -38,6 +40,12 @@ namespace HelloSwitcher
 			base.OnStartup(e);
 
 			Logger.RecordOperation("Start");
+
+			if (!Initiate())
+			{
+				this.Shutdown();
+				return;
+			}
 
 			await Settings.LoadAsync();
 
@@ -92,7 +100,9 @@ namespace HelloSwitcher
 						(ToolStripItemType.Separator, null, null),
 						(ToolStripItemType.Button,"Close", async () =>
 						{
-							await _switcher.EnableAsync();
+							if (!RunAsService)
+								await _switcher.EnableAsync();
+
 							this.Shutdown();
 						})
 					});
@@ -102,6 +112,64 @@ namespace HelloSwitcher
 					ShowWindow();
 			}
 		}
+
+		protected override void OnExit(ExitEventArgs e)
+		{
+			_watcher?.Dispose();
+			_holder?.Dispose();
+			End();
+
+			base.OnExit(e);
+		}
+
+		#region Lifecycle
+
+		public const string UninstallOption = "/uninstall";
+
+		private const string SemaphoreName = "HelloSwitcher.App";
+		private Semaphore _semaphore;
+		private bool _semaphoreCreated;
+
+		internal bool RunAsService { get; set; }
+
+		private bool Initiate()
+		{
+			if (Environment.GetCommandLineArgs().Any(x => string.Equals(x, UninstallOption, StringComparison.OrdinalIgnoreCase)))
+			{
+				ServiceBroker.Uninstall();
+				return false;
+			}
+
+			try
+			{
+				_semaphore = new Semaphore(1, 1, SemaphoreName, out _semaphoreCreated);
+			}
+			catch
+			{
+			}
+
+			if (!_semaphoreCreated)
+				return false;
+
+			RunAsService = ServiceBroker.IsInstalled();
+			if (RunAsService)
+				ServiceBroker.Pause();
+
+			return true;
+		}
+
+		private void End()
+		{
+			if (!_semaphoreCreated)
+				return;
+
+			ServiceBroker.Continue();
+			_semaphore?.Dispose();
+		}
+
+		#endregion
+
+		#region Window
 
 		private void ShowWindow()
 		{
@@ -121,6 +189,14 @@ namespace HelloSwitcher
 				this.MainWindow = null;
 				await _switcher.CheckAsync("Settings Changed Check");
 				_holder.UpdateIcon(_switcher.RemovableCameraExists);
+
+				await Task.Run(() =>
+				{
+					if (RunAsService)
+						ServiceBroker.Install();
+					else
+						ServiceBroker.Uninstall();
+				});
 			}
 		}
 
@@ -133,12 +209,6 @@ namespace HelloSwitcher
 			return window.SearchAsync();
 		}
 
-		protected override void OnExit(ExitEventArgs e)
-		{
-			_watcher?.Dispose();
-			_holder?.Dispose();
-
-			base.OnExit(e);
-		}
+		#endregion
 	}
 }

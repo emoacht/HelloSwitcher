@@ -30,6 +30,13 @@ namespace HelloSwitcher.ViewModels
 		}
 		private bool _canApply;
 
+		public bool RunAsService
+		{
+			get => _runAsService;
+			set => SetPropertyValue(ref _runAsService, value);
+		}
+		private bool _runAsService;
+
 		private readonly App _app;
 		private Settings Settings => _app.Settings;
 
@@ -51,6 +58,8 @@ namespace HelloSwitcher.ViewModels
 				CanApply = (Cameras.Any(x => x.IsBuiltInCameraSelected) || Settings.IsBuiltInCameraFilled)
 						&& (Cameras.Any(x => x.IsRemovableCameraSelected) || Settings.IsRemovableCameraFilled);
 			}
+
+			this.RunAsService = _app.RunAsService;
 		}
 
 		public async Task SearchAsync()
@@ -137,6 +146,8 @@ namespace HelloSwitcher.ViewModels
 
 			if (isUpdated)
 				await Settings.SaveAsync();
+
+			_app.RunAsService = this.RunAsService;
 		}
 
 		#region IDisposable

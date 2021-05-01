@@ -169,7 +169,11 @@
 		<ListView Style="{StaticResource CameraListViewStyle}"
 				  ItemsSource="{Binding CamerasView}"/>
 
-		<Grid Margin="10,14,10,10">
+		<CheckBox Margin="10,12,10,4"
+				  Content="Run as service when this app is not running"
+				  IsChecked="{Binding RunAsService, Mode=TwoWay}"/>
+
+		<Grid Margin="10">
 			<Grid.ColumnDefinitions>
 				<ColumnDefinition/>
 				<ColumnDefinition Width="90"/>

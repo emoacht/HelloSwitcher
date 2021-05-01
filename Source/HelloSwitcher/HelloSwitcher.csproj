@@ -120,6 +120,10 @@
       <Project>{b6d05371-c3f7-444a-89bf-61acb0971c01}</Project>
       <Name>HelloSwitcher.Core</Name>
     </ProjectReference>
+    <ProjectReference Include="..\HelloSwitcher.Service\HelloSwitcher.Service.csproj">
+      <Project>{b9b5a790-f248-4ba4-8582-07782f28dab9}</Project>
+      <Name>HelloSwitcher.Service</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
