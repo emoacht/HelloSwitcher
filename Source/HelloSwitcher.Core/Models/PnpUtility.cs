@@ -26,7 +26,7 @@ namespace HelloSwitcher.Models
 			var lines = await ExecuteDirectAsync(arguments, cancellationToken);
 #if DEBUG
 			foreach (var line in lines)
-				Debug.WriteLine($"RE {line}");
+				Debug.WriteLine(line);
 #endif
 			return lines;
 		}
