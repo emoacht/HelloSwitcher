@@ -61,6 +61,10 @@ namespace HelloSwitcher.Models
 
 		public DeviceUsbServiceWatcher(string serviceName)
 		{
+			// This function call using ServiceBase.ServiceName causes AccessViolationException
+			// when the system suspends and so make this class effectively unusable.
+			// The service status handle obtained by this function matches ServiceBase.ServiceHandle
+			// which is obtained by the same function inside ServiceBase class. 
 			_statusHandle = RegisterServiceCtrlHandlerEx(
 				serviceName,
 				HandlerProc,
