@@ -42,14 +42,15 @@ namespace HelloSwitcher.Service
 		/// <summary>
 		/// Installs the service if not installed (without generating log).
 		/// </summary>
-		public static void Install()
+		/// <param name="arguments">Command-line arguments to the service (not to installer)</param>
+		public static void Install(string arguments = null)
 		{
 			if (IsInstalled())
 				return;
 
 			try
 			{
-				ManagedInstallerClass.InstallHelper(new[] { "/LogFile=", ServiceFilePath });
+				ManagedInstallerClass.InstallHelper(new[] { "/LogFile=", $"{ProjectInstaller.ArgumentsOption}{arguments}", ServiceFilePath });
 			}
 			catch (InvalidOperationException)
 			{

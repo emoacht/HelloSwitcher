@@ -1,4 +1,6 @@
 ﻿
+using System.Collections;
+
 namespace HelloSwitcher.Service
 {
 	partial class ProjectInstaller
@@ -19,6 +21,18 @@ namespace HelloSwitcher.Service
 				components.Dispose();
 			}
 			base.Dispose(disposing);
+		}
+
+		public const string ArgumentsOption = "/Arguments=";
+
+		protected override void OnBeforeInstall(IDictionary savedState)
+		{
+			var path = this.Context.Parameters["assemblypath"];
+			var arguments = this.Context.Parameters[ArgumentsOption.TrimStart('/').TrimEnd('=')]?.Trim();
+			if (!string.IsNullOrEmpty(arguments))
+				this.Context.Parameters["assemblypath"] = $"\"{path.Trim('\"')}\" {arguments}";
+
+			base.OnBeforeInstall(savedState);
 		}
 
 		#region Component Designer generated code

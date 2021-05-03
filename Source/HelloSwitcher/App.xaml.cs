@@ -193,7 +193,13 @@ namespace HelloSwitcher
 				await Task.Run(() =>
 				{
 					if (RunAsService)
+					{
+#if DEBUG
+						ServiceBroker.Install(Logger.OperationOption);
+#else
 						ServiceBroker.Install();
+#endif
+					}
 					else
 						ServiceBroker.Uninstall();
 				});
