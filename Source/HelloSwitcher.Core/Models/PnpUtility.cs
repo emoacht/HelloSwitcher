@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace HelloSwitcher.Models
@@ -15,20 +16,19 @@ namespace HelloSwitcher.Models
 	/// <remarks>
 	/// https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/pnputil
 	/// </remarks>
-	internal static class PnpUtility
+	public static class PnpUtility
 	{
-		public static Task EnableAsync(string deviceInstanceId) => ExecuteAsync($@"/enable-device ""{deviceInstanceId}""");
-		public static Task DisableAsync(string deviceInstanceId) => ExecuteAsync($@"/disable-device ""{deviceInstanceId}""");
+		public static Task<string[]> EnableAsync(string deviceInstanceId, CancellationToken cancellationToken = default) => ExecuteAsync($@"/enable-device ""{deviceInstanceId}""", cancellationToken);
+		public static Task<string[]> DisableAsync(string deviceInstanceId, CancellationToken cancellationToken = default) => ExecuteAsync($@"/disable-device ""{deviceInstanceId}""", cancellationToken);
 
-		private static async Task ExecuteAsync(string arguments)
+		private static async Task<string[]> ExecuteAsync(string arguments, CancellationToken cancellationToken)
 		{
-			var lines = await ExecuteDirectAsync(arguments);
+			var lines = await ExecuteDirectAsync(arguments, cancellationToken);
 #if DEBUG
 			foreach (var line in lines)
-				Debug.WriteLine($"RE {line}");
+				Debug.WriteLine(line);
 #endif
-			if (App.IsService)
-				Logger.RecordOperation($"{nameof(ExecuteAsync)}, {nameof(arguments)}:[{arguments}]{Environment.NewLine}{string.Join(Environment.NewLine, lines)}");
+			return lines;
 		}
 
 		#region Type
@@ -36,7 +36,7 @@ namespace HelloSwitcher.Models
 		public class CameraItem
 		{
 			internal string ClassName { get; }
-			internal Guid ClassGuid { get; }
+			public Guid ClassGuid { get; }
 
 			public string DeviceInstanceId { get; }
 			public string Description { get; }
@@ -78,15 +78,15 @@ namespace HelloSwitcher.Models
 
 		#endregion
 
-		public static async Task<CameraItem[]> GetCamerasAsync()
+		public static async Task<CameraItem[]> GetCamerasAsync(CancellationToken cancellationToken = default)
 		{
-			return (await GetCamerasAsync("Camera"))
-				.Concat(await GetCamerasAsync("Image")).ToArray();
+			return (await GetCamerasAsync("Camera", cancellationToken))
+				.Concat(await GetCamerasAsync("Image", cancellationToken)).ToArray();
 		}
 
-		public static async Task<CameraItem[]> GetCamerasAsync(string className)
+		public static async Task<CameraItem[]> GetCamerasAsync(string className, CancellationToken cancellationToken = default)
 		{
-			var lines = await ExecuteCommandLineAsync($"/enum-devices /class {className} /connected");
+			var lines = await ExecuteCommandLineAsync($"/enum-devices /class {className} /connected", cancellationToken);
 
 			IEnumerable<CameraItem> Enumerate()
 			{
@@ -112,7 +112,7 @@ namespace HelloSwitcher.Models
 			return Enumerate().ToArray();
 		}
 
-		private static async Task<string[]> ExecuteDirectAsync(string arguments)
+		private static async Task<string[]> ExecuteDirectAsync(string arguments, CancellationToken cancellationToken)
 		{
 			using var canceller = new RedirectionCanceller();
 
@@ -120,7 +120,7 @@ namespace HelloSwitcher.Models
 			{
 				StartInfo =
 				{
-					FileName = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "pnputil.exe"),
+					FileName = Path.Combine(Environment.SystemDirectory, "pnputil.exe"),
 					Arguments = arguments,
 					CreateNoWindow = true,
 					UseShellExecute = false,
@@ -136,6 +136,8 @@ namespace HelloSwitcher.Models
 
 			void received(object sender, DataReceivedEventArgs e) => outputLines.Add(e.Data);
 			void exited(object sender, EventArgs e) => tcs.SetResult(true);
+
+			using var registration = cancellationToken.Register(() => tcs.TrySetCanceled());
 
 			try
 			{
@@ -156,7 +158,7 @@ namespace HelloSwitcher.Models
 			}
 		}
 
-		private static async Task<string[]> ExecuteCommandLineAsync(string arguments)
+		private static async Task<string[]> ExecuteCommandLineAsync(string arguments, CancellationToken cancellationToken)
 		{
 			using var canceller = new RedirectionCanceller();
 
@@ -186,6 +188,8 @@ namespace HelloSwitcher.Models
 
 			void received(object sender, DataReceivedEventArgs e) => outputLines.Add(e.Data);
 			void exited(object sender, EventArgs e) => tcs.SetResult(true);
+
+			using var registration = cancellationToken.Register(() => tcs.TrySetCanceled());
 
 			try
 			{

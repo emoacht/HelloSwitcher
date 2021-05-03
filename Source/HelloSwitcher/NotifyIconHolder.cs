@@ -11,6 +11,17 @@ namespace HelloSwitcher
 {
 	public class NotifyIconHolder : IDisposable
 	{
+		#region Type
+
+		private class CustomColorTable : ProfessionalColorTable
+		{
+			public override System.Drawing.Color ImageMarginGradientBegin => System.Drawing.Color.Transparent;
+			public override System.Drawing.Color ImageMarginGradientMiddle => System.Drawing.Color.Transparent;
+			public override System.Drawing.Color ImageMarginGradientEnd => System.Drawing.Color.Transparent;
+		}
+
+		#endregion
+
 		private readonly NotifyIcon _notifyIcon;
 
 		public NotifyIconHolder(string[] iconUriStrings, string iconText, (ToolStripItemType type, string text, Action action)[] menus)
@@ -34,7 +45,7 @@ namespace HelloSwitcher
 			_notifyIcon = new NotifyIcon();
 			IconIndex = 0;
 
-			_notifyIcon.ContextMenuStrip = new ContextMenuStrip();
+			_notifyIcon.ContextMenuStrip = new ContextMenuStrip { Renderer = new ToolStripProfessionalRenderer(new CustomColorTable()) };
 			foreach (var (type, text, action, index) in menus.Select((x, index) => (x.type, x.text, x.action, index)))
 			{
 				var addedMargin = new Padding(left: 0, top: (index == 0 ? 4 : 0), right: 0, bottom: (index == menus.Length - 1 ? 4 : 0));
@@ -64,7 +75,7 @@ namespace HelloSwitcher
 			}
 
 			// Show NotifyIcon.
-			_notifyIcon.Visible = true;			
+			_notifyIcon.Visible = true;
 		}
 
 		#region Icons
@@ -118,6 +129,7 @@ namespace HelloSwitcher
 			if (disposing)
 			{
 				// Free any other managed objects here.
+				_notifyIcon?.ContextMenuStrip?.Dispose();
 				_notifyIcon?.Dispose();
 			}
 

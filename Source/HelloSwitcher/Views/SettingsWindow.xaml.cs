@@ -12,7 +12,6 @@ using System.Windows.Input;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 
-using HelloSwitcher.Models;
 using HelloSwitcher.ViewModels;
 
 namespace HelloSwitcher.Views
@@ -21,11 +20,11 @@ namespace HelloSwitcher.Views
 	{
 		private readonly SettingsWindowViewModel _viewModel;
 
-		public SettingsWindow(Settings settings)
+		public SettingsWindow(App app)
 		{
 			InitializeComponent();
 
-			this.DataContext = _viewModel = new SettingsWindowViewModel(settings);
+			this.DataContext = _viewModel = new SettingsWindowViewModel(app);
 			this.Loaded += OnLoaded;
 		}
 

@@ -11,7 +11,7 @@ namespace HelloSwitcher.Models
 	/// <summary>
 	/// Utility methods for USB devices by Device Information Functions
 	/// </summary>
-	internal static class DeviceUsbHelper
+	public static class DeviceUsbHelper
 	{
 		#region Win32
 
@@ -124,7 +124,7 @@ namespace HelloSwitcher.Models
 			CM_DEVCAP_NONDYNAMIC = 0x00000200
 		}
 
-		[DllImport("Setupapi.dll", CharSet = CharSet.Auto, SetLastError = true)]
+		[DllImport("SetupAPI.dll", CharSet = CharSet.Auto, SetLastError = true)]
 		[return: MarshalAs(UnmanagedType.Bool)]
 		private static extern bool SetupDiGetDeviceInstanceId(
 			IntPtr DeviceInfoSet,
@@ -163,12 +163,21 @@ namespace HelloSwitcher.Models
 			public string dbcc_name;
 		}
 
+		private const int DEVICE_NOTIFY_WINDOW_HANDLE = 0x00000000;
+		private const int DEVICE_NOTIFY_SERVICE_HANDLE = 0x00000001;
+
+		private const int DBT_DEVTYP_DEVICEINTERFACE = 0x00000005;
+
 		private const int INVALID_HANDLE_VALUE = -1;
 		private const int ERROR_NO_MORE_ITEMS = 259;
 
 		#endregion
 
 		public const int WM_DEVICECHANGE = 0x0219;
+
+		public const int SERVICE_CONTROL_STOP = 0x00000001;
+		public const int SERVICE_CONTROL_DEVICEEVENT = 0x0000000B;
+		public const int SERVICE_CONTROL_POWEREVENT = 0x0000000D;
 
 		public const int DBT_DEVICEARRIVAL = 0x8000;
 		public const int DBT_DEVICEREMOVECOMPLETE = 0x8004;
@@ -340,18 +349,25 @@ namespace HelloSwitcher.Models
 
 		#region Register/Unregister
 
-		private const int DBT_DEVTYP_DEVICEINTERFACE = 0x00000005;
 		private static readonly Guid GUID_DEVINTERFACE_USB_DEVICE = new Guid("A5DCBF10-6530-11D2-901F-00C04FB951ED");
 
-		private static IntPtr _notificationHandle;
+		public static IntPtr RegisterWindowNotification(IntPtr windowHandle)
+		{
+			return RegisterNotification(windowHandle, DEVICE_NOTIFY_WINDOW_HANDLE);
+		}
 
-		public static bool RegisterUsbDeviceNotification(IntPtr windowHandle)
+		public static IntPtr RegisterServiceNotification(IntPtr serviceHandle)
+		{
+			return RegisterNotification(serviceHandle, DEVICE_NOTIFY_SERVICE_HANDLE);
+		}
+
+		private static IntPtr RegisterNotification(IntPtr handle, uint flags)
 		{
 			var dbcc = new DEV_BROADCAST_DEVICEINTERFACE
 			{
 				dbcc_size = (uint)Marshal.SizeOf<DEV_BROADCAST_DEVICEINTERFACE>(),
 				dbcc_devicetype = DBT_DEVTYP_DEVICEINTERFACE,
-				dbcc_classguid = GUID_DEVINTERFACE_USB_DEVICE,
+				dbcc_classguid = GUID_DEVINTERFACE_USB_DEVICE
 			};
 
 			var buffer = IntPtr.Zero;
@@ -360,17 +376,15 @@ namespace HelloSwitcher.Models
 				buffer = Marshal.AllocHGlobal((int)dbcc.dbcc_size);
 				Marshal.StructureToPtr(dbcc, buffer, true);
 
-				_notificationHandle = RegisterDeviceNotification(
-					windowHandle,
+				return RegisterDeviceNotification(
+					handle,
 					buffer,
-					0);
-
-				return (_notificationHandle != IntPtr.Zero);
+					flags);
 			}
 			catch (Exception ex)
 			{
-				Debug.WriteLine(ex);
-				return false;
+				Debug.WriteLine($"Failed to register notification.\r\n{ex}");
+				return IntPtr.Zero;
 			}
 			finally
 			{
@@ -379,9 +393,10 @@ namespace HelloSwitcher.Models
 			}
 		}
 
-		public static void UnregisterUsbDeviceNotification()
+		public static void UnregisterNotification(IntPtr handle)
 		{
-			UnregisterDeviceNotification(_notificationHandle);
+			if (handle != IntPtr.Zero)
+				UnregisterDeviceNotification(handle);
 		}
 
 		public static bool TryGetDeviceName(IntPtr LParam, out string deviceName)

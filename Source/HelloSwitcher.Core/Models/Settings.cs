@@ -10,7 +10,15 @@ namespace HelloSwitcher.Models
 {
 	public class Settings
 	{
+		#region Built-in camera
+
 		public string BuiltInCameraDeviceInstanceId { get; set; }
+
+		public bool IsBuiltInCameraFilled => !string.IsNullOrWhiteSpace(BuiltInCameraDeviceInstanceId);
+
+		#endregion
+
+		#region Removable camera
 
 		public string RemovableCameraDeviceInstanceId
 		{
@@ -27,15 +35,19 @@ namespace HelloSwitcher.Models
 
 		public Guid RemovableCameraClassGuid { get; set; }
 
-		internal bool IsLoaded { get; private set; }
+		public bool IsRemovableCameraFilled => !string.IsNullOrWhiteSpace(RemovableCameraDeviceInstanceId)
+											&& (RemovableCameraClassGuid != default);
 
-		internal bool IsFilled => !string.IsNullOrWhiteSpace(BuiltInCameraDeviceInstanceId)
-							   && !string.IsNullOrWhiteSpace(RemovableCameraDeviceInstanceId)
-							   && (RemovableCameraClassGuid != default);
+		#endregion
+
+		public bool IsLoaded { get; private set; }
+
+		public bool IsFilled => IsBuiltInCameraFilled
+							 && IsRemovableCameraFilled;
 
 		#region Load/Save
 
-		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData), nameof(HelloSwitcher));
+		private static string FolderPath => Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonApplicationData), nameof(HelloSwitcher));
 		private static string FilePath => Path.Combine(FolderPath, "settings.txt");
 
 		private const char Separator = '=';
@@ -76,9 +88,6 @@ namespace HelloSwitcher.Models
 			}
 
 			IsLoaded = !properties.Any();
-
-			if (App.IsService)
-				Logger.RecordOperation($"{nameof(LoadAsync)} {nameof(IsLoaded)}:[{IsLoaded}]");
 		}
 
 		public async Task SaveAsync()

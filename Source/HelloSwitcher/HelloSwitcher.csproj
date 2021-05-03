@@ -51,7 +51,6 @@
     <Reference Include="System.Core" />
     <Reference Include="System.Data" />
     <Reference Include="System.Drawing" />
-    <Reference Include="System.Management" />
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xaml">
       <RequiredTargetFramework>4.0</RequiredTargetFramework>
@@ -69,14 +68,6 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
-    <Compile Include="Models\DeviceConsole.cs" />
-    <Compile Include="Models\DeviceUsbHelper.cs" />
-    <Compile Include="Models\DeviceUsbWatcher.cs" />
-    <Compile Include="Models\Logger.cs" />
-    <Compile Include="Models\PnpUtility.cs" />
-    <Compile Include="Models\Settings.cs" />
-    <Compile Include="Models\VidPid.cs" />
-    <Compile Include="Models\WmiUsbHelper.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -94,7 +85,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="DeviceSwitcher.cs" />
     <Compile Include="NotifyIconHolder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
@@ -124,6 +114,16 @@
   </ItemGroup>
   <ItemGroup>
     <Resource Include="Resources\Disconnected.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\HelloSwitcher.Core\HelloSwitcher.Core.csproj">
+      <Project>{b6d05371-c3f7-444a-89bf-61acb0971c01}</Project>
+      <Name>HelloSwitcher.Core</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\HelloSwitcher.Service\HelloSwitcher.Service.csproj">
+      <Project>{b9b5a790-f248-4ba4-8582-07782f28dab9}</Project>
+      <Name>HelloSwitcher.Service</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>

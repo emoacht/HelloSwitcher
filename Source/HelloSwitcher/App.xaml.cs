@@ -3,54 +3,70 @@ using System.Collections.Generic;
 using System.Configuration;
 using System.Data;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows;
 using System.Windows.Threading;
 
 using HelloSwitcher.Models;
+using HelloSwitcher.Service;
 using HelloSwitcher.Views;
 
 namespace HelloSwitcher
 {
 	public partial class App : Application
 	{
-		private Settings _settings;
+		internal Settings Settings { get; }
+		internal Logger Logger { get; }
+
 		private DeviceSwitcher _switcher;
-		private DeviceUsbWatcher _watcher;
+		private DeviceUsbWindowWatcher _watcher;
 		private NotifyIconHolder _holder;
 
-		internal static bool IsService { get; } = !Environment.UserInteractive;
+		internal static bool IsInteractive { get; } = Environment.UserInteractive;
+
+		public App() : base()
+		{
+			DispatcherUnhandledException += (_, e) => Logger.RecordError(e.Exception);
+			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordError(e.Exception);
+			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordError(e.ExceptionObject);
+
+			Settings = new Settings();
+			Logger = new Logger("operation.log", "error.log");
+		}
 
 		protected override async void OnStartup(StartupEventArgs e)
 		{
 			base.OnStartup(e);
 
-			DispatcherUnhandledException += (_, e) => Logger.RecordException(e.Exception);
-			TaskScheduler.UnobservedTaskException += (_, e) => Logger.RecordException(e.Exception);
-			AppDomain.CurrentDomain.UnhandledException += (_, e) => Logger.RecordException(e.ExceptionObject);
+			Logger.RecordOperation("Start");
 
-			if (IsService)
-				Logger.RecordOperation($"Start", false);
+			if (!Initiate())
+			{
+				this.Shutdown();
+				return;
+			}
 
-			_settings = new Settings();
-			await _settings.LoadAsync();
+			await Settings.LoadAsync();
 
-			_switcher = new DeviceSwitcher(_settings);
-			await _switcher.CheckAsync();
+			Logger.RecordOperation($"Settings IsLoaded: {Settings.IsLoaded}");
 
-			_watcher = new DeviceUsbWatcher();
+			_switcher = new DeviceSwitcher(Settings, Logger);
+			await _switcher.CheckAsync("Initial Check");
+
+			_watcher = new DeviceUsbWindowWatcher();
 			_watcher.UsbDeviceChanged += async (_, e) =>
 			{
-				await _switcher.CheckAsync(e.deviceName, e.exists);
+				await _switcher.CheckAsync("Device Changed Check", e.deviceName, e.exists);
 
-				if (!IsService)
+				if (IsInteractive)
 				{
 					_holder?.UpdateIcon(_switcher.RemovableCameraExists);
 					await UpdateWindow();
 				}
 			};
 
-			if (!IsService)
+			if (IsInteractive)
 			{
 				_holder = new NotifyIconHolder(
 					new[]
@@ -67,7 +83,7 @@ namespace HelloSwitcher
 						(ToolStripItemType.Separator, null, null),
 						(ToolStripItemType.Button, "Re-check USB camera", async () =>
 						{
-							await _switcher.CheckAsync();
+							await _switcher.CheckAsync("Manual Check");
 							_holder.UpdateIcon(_switcher.RemovableCameraExists);
 							await UpdateWindow();
 						}),
@@ -84,16 +100,76 @@ namespace HelloSwitcher
 						(ToolStripItemType.Separator, null, null),
 						(ToolStripItemType.Button,"Close", async () =>
 						{
-							await _switcher.EnableAsync();
+							if (!RunAsService)
+								await _switcher.EnableAsync();
+
 							this.Shutdown();
 						})
 					});
 				_holder.UpdateIcon(_switcher.RemovableCameraExists);
 
-				if (!_settings.IsLoaded)
+				if (!Settings.IsLoaded)
 					ShowWindow();
 			}
 		}
+
+		protected override void OnExit(ExitEventArgs e)
+		{
+			_watcher?.Dispose();
+			_holder?.Dispose();
+			End();
+
+			base.OnExit(e);
+		}
+
+		#region Lifecycle
+
+		public const string UninstallOption = "/uninstall";
+
+		private const string SemaphoreName = "HelloSwitcher.App";
+		private Semaphore _semaphore;
+		private bool _semaphoreCreated;
+
+		internal bool RunAsService { get; set; }
+
+		private bool Initiate()
+		{
+			if (Environment.GetCommandLineArgs().Any(x => string.Equals(x, UninstallOption, StringComparison.OrdinalIgnoreCase)))
+			{
+				ServiceBroker.Uninstall();
+				return false;
+			}
+
+			try
+			{
+				_semaphore = new Semaphore(1, 1, SemaphoreName, out _semaphoreCreated);
+			}
+			catch
+			{
+			}
+
+			if (!_semaphoreCreated)
+				return false;
+
+			RunAsService = ServiceBroker.IsInstalled();
+			if (RunAsService)
+				ServiceBroker.Pause();
+
+			return true;
+		}
+
+		private void End()
+		{
+			if (!_semaphoreCreated)
+				return;
+
+			ServiceBroker.Continue();
+			_semaphore?.Dispose();
+		}
+
+		#endregion
+
+		#region Window
 
 		private void ShowWindow()
 		{
@@ -104,15 +180,29 @@ namespace HelloSwitcher
 				return;
 			}
 
-			this.MainWindow = new SettingsWindow(_settings);
+			this.MainWindow = new SettingsWindow(this);
 			this.MainWindow.Closed += OnClosed;
 			this.MainWindow.Show();
 
 			async void OnClosed(object sender, EventArgs e)
 			{
 				this.MainWindow = null;
-				await _switcher.CheckAsync();
+				await _switcher.CheckAsync("Settings Changed Check");
 				_holder.UpdateIcon(_switcher.RemovableCameraExists);
+
+				await Task.Run(() =>
+				{
+					if (RunAsService)
+					{
+#if DEBUG
+						ServiceBroker.Install(Logger.OperationOption);
+#else
+						ServiceBroker.Install();
+#endif
+					}
+					else
+						ServiceBroker.Uninstall();
+				});
 			}
 		}
 
@@ -125,12 +215,6 @@ namespace HelloSwitcher
 			return window.SearchAsync();
 		}
 
-		protected override void OnExit(ExitEventArgs e)
-		{
-			_watcher?.Dispose();
-			_holder?.Dispose();
-
-			base.OnExit(e);
-		}
+		#endregion
 	}
 }
