@@ -5,14 +5,11 @@ Hello Switcher is a Windows desktop tool to help switching cameras for Windows H
 ![Screenshot](Images/Screenshot_settings.png)<br>
 (DPI: 150%)
 
-If your PC has a built-in Windows Hello camera like a Surface series and you wish to add a USB camera which has Windows Hello capability* for using Windows Hello authentication even when the built-in camera is unusable, you will not be able to switch the two cameras as you might expect. It is because Microsoft has not added the functionality to manage multiple Windows Hello cameras to the OS yet.
+If your PC has a built-in Windows Hello camera and you wish to add a USB camera which has Windows Hello capability* as an alternative when the built-in camera is unusable, you will not be able to switch the two cameras as you might expect. It is because Microsoft has not added the functionality to manage multiple Windows Hello cameras yet. This is a known limitation of Windows 10.
 
-This tool helps switching between a built-in camera and a USB camera. It works as follows:
+ - [Can I use an external camera when my laptop is closed or docked?](https://docs.microsoft.com/en-us/windows/security/identity-protection/hello-for-business/hello-faq#can-i-use-an-external-camera-when-my-laptop-is-closed-or-docked)
 
-- If a specifiled USB camera is connected to your PC, this tool will __disable__ a specified built-in camera so that the USB camera is used for Windows Hello.
-- If the USB camera is disconnected, this tool will __enable__ the built-in camera so that it will be used for Windows Hello again.
-
-This tool internally calls [PnPUtil](https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/pnputil), a command-line tool which is included in the OS for managing devices, with administrator privilege to enable/disable a built-in camera.
+This tool is intended to help switching between a built-in camera and a USB camera until this limitation is solved in future.
 
 (* USB cameras with Windows Hello capability are limited in the market: Mouse Computer CM02, Logitech Brio Webcam, Lenovo 500 FHD Webcam and so on.)
 
@@ -21,28 +18,45 @@ This tool internally calls [PnPUtil](https://docs.microsoft.com/en-us/windows-ha
  * Windows 10
  * .NET Framework 4.8
 
+This tool has to be run as administrator. 
+
 ## Download
 
 :floppy_disk: [Latest release](https://github.com/emoacht/HelloSwitcher/releases/latest)
 
+## How it works
+
+This tool works as follows:
+
+- If a specifiled USB camera is connected to the PC, this tool will __disable__ a specified built-in camera so that the USB camera is used for Windows Hello.
+- If the USB camera is disconnected, this tool will __enable__ the built-in camera so that it will be used for Windows Hello again.
+
+This tool internally calls [PnPUtil](https://docs.microsoft.com/en-us/windows-hardware/drivers/devtest/pnputil), a command-line tool which is included in the OS for managing devices, with administrator privilege to enable/disable a built-in camera.
+
+This tool consists of ordinary app and Windows service. The former (app) has the notification icon to interact with a user and provides settings. The latter (service) runs in the background and automatically starts before sign-in of a user. This service is necessary to make sure the cameras are switched before Window Hello is used for sign-in in the case where the USB camera is connected/disconnected during the PC is turned off or suspended.
+
 ## Getting started
 
-1. Run the executable file. This tool's icon will appear in the notification area. Open the menu by right click and select `Open settings`. Then the settings window will appear.
+1. Run the installer. When this app starts, its icon will appear in the notification area. Right-click it to open the menu and select `Open settings`. Then the settings window will appear.
 
-2. Specify a built-in camera used for Windows Hello and a USB camera which you wish to use for Windows Hello and then click `Apply`. That's all.
+2. Specify a built-in camera for Windows Hello and a USB camera which you wish to use for Windows Hello. If you wish to run this tool in the background, check `Run as service when this app is not running`. Then click `Apply`. That’s all.
 
-3. If you wish to run this tool from startup, register it in Task Scheduler.
+3. If you select not to run as service but wish to run this app (not service) from startup, register the executable file (HelloSwitcher.exe) in Task Scheduler.
 
     - In `Gereral`, check `Run with highest privileges`.
     - In `Conditions`, uncheck __both__ `Start the task only if the computer is on AC power` and `Stop if the computer switches to battery power`.
     - In `Settings`, uncheck `Stop the task if it runs longer than:`.
 
-## Remarks
-
- - This tool has to be run as administrator because it is required to enable/disable a device.
- - This tool cannot change enabled/disabled state of the specified built-in camera at the OS's sign-in because it runs after sign-in. It means that if the specified USB camera is connected before sign-out and then disconnected before sign-in, no camera will be available for Windows Hello at sign-in.
-
 ## History
+
+Ver 1.3 2021-5-4
+
+ - Add Windows service
+ - Enable to install and run service
+
+Ver 1.2 2021-4-22
+
+ - Enable to run as service
 
 Ver 1.1 2021-2-18
 
