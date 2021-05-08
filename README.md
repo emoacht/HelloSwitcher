@@ -9,7 +9,7 @@ If your PC has a built-in Windows Hello camera and you wish to add a USB camera 
 
  - [Can I use an external camera when my laptop is closed or docked?](https://docs.microsoft.com/en-us/windows/security/identity-protection/hello-for-business/hello-faq#can-i-use-an-external-camera-when-my-laptop-is-closed-or-docked)
 
-This tool is intended to help switching between a built-in camera and a USB camera until this limitation is solved in future.
+This tool is intended to help switching between a built-in camera and a USB camera for the time being.
 
 (* USB cameras with Windows Hello capability are limited in the market: Mouse Computer CM02, Logitech Brio Webcam, Lenovo 500 FHD Webcam and so on.)
 
@@ -37,9 +37,9 @@ This tool consists of ordinary app and Windows service. The former (app) has the
 
 ## Getting started
 
-1. Run the installer. When this app starts, its icon will appear in the notification area. Right-click it to open the menu and select `Open settings`. Then the settings window will appear.
+1. Run the installer. Start this app from the start menu. This app's icon will appear in the notification area. Right-click it to open the menu and select `Open settings`.
 
-2. Specify a built-in camera for Windows Hello and a USB camera which you wish to use for Windows Hello. If you wish to run this tool in the background, check `Run as service when this app is not running`. Then click `Apply`. That’s all.
+2. In the settings window, specify a built-in camera for Windows Hello and a USB camera which you wish to use for Windows Hello. In addition, if you wish to run this tool in the background, check `Run as service when this app is not running`. Then click `Apply`. That’s all.
 
 3. If you select not to run as service but wish to run this app (not service) from startup, register the executable file (HelloSwitcher.exe) in Task Scheduler.
 
