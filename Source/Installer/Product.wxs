@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <Wix xmlns="http://schemas.microsoft.com/wix/2006/wi">
-  <Product Id="*" Name="Hello Switcher" Manufacturer="emoacht" Version="1.3.0"
+  <Product Id="*" Name="Hello Switcher" Manufacturer="emoacht" Version="1.3.1"
            Language="1033" Codepage="1252" UpgradeCode="{9043B009-DD4C-460D-9295-5B312A5E8948}">
     <Package Id="*" InstallerVersion="500" Compressed="yes"
              InstallScope="perMachine" InstallPrivileges="elevated"
