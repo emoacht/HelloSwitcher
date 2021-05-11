@@ -45,10 +45,13 @@ namespace HelloSwitcher
 			_notifyIcon = new NotifyIcon();
 			IconIndex = 0;
 
+			var dpiScale = WindowHelper.GetNotificationAreaDpiScale();
+			var padding = (int)Math.Round(2F * dpiScale, MidpointRounding.AwayFromZero);
+
 			_notifyIcon.ContextMenuStrip = new ContextMenuStrip { Renderer = new ToolStripProfessionalRenderer(new CustomColorTable()) };
 			foreach (var (type, text, action, index) in menus.Select((x, index) => (x.type, x.text, x.action, index)))
 			{
-				var addedMargin = new Padding(left: 0, top: (index == 0 ? 4 : 0), right: 0, bottom: (index == menus.Length - 1 ? 4 : 0));
+				var addedMargin = new Padding(left: 0, top: (index == 0 ? padding : 0), right: 0, bottom: (index == menus.Length - 1 ? padding : 0));
 
 				switch (type)
 				{
@@ -56,19 +59,19 @@ namespace HelloSwitcher
 						_notifyIcon.ContextMenuStrip.Items.Add(new ToolStripMenuItem(text, null, (_, _) => action?.Invoke())
 						{
 							Margin = addedMargin,
-							Padding = new Padding(0, 0, 0, 4)
+							Padding = new Padding(0, 0, 0, padding)
 						});
 						break;
 					case ToolStripItemType.Label:
 						_notifyIcon.ContextMenuStrip.Items.Add(new ToolStripLabel(text)
 						{
-							Margin = new Padding(0, 4, 0, 4) + addedMargin
+							Margin = new Padding(0, padding, 0, padding) + addedMargin
 						});
 						break;
 					case ToolStripItemType.Separator:
 						_notifyIcon.ContextMenuStrip.Items.Add(new ToolStripSeparator
 						{
-							Margin = new Padding(0, 4, 0, 4)
+							Margin = new Padding(0, padding, 0, padding)
 						});
 						break;
 				}

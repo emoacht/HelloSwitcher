@@ -68,6 +68,8 @@
       <DependentUpon>App.xaml</DependentUpon>
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="NotifyIconHolder.cs" />
+    <Compile Include="WindowHelper.cs" />
     <Compile Include="Properties\Resources.Designer.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>
@@ -85,7 +87,6 @@
     </Page>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="NotifyIconHolder.cs" />
     <Compile Include="Properties\AssemblyInfo.cs">
       <SubType>Code</SubType>
     </Compile>
