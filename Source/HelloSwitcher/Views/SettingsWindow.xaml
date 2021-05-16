@@ -6,7 +6,8 @@
 		x:Name="WindowRoot"
 		Title="Hello Switcher Settings"
 		Height="300" Width="440" SizeToContent="Height" ResizeMode="NoResize"
-		Background="{DynamicResource App.Background}">
+		Background="{DynamicResource App.Background}"
+		WindowStartupLocation="CenterScreen">
 	<Window.Resources>
 		<SolidColorBrush x:Key="App.Background" Color="#FFfdfdfd"/>
 		<SolidColorBrush x:Key="Light.Background" Color="#FFededed"/>
