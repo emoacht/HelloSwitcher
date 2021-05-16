@@ -1,0 +1,128 @@
+﻿<Window x:Class="HelloSwitcher.Views.MenuWindow"
+		xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+		Height="200" Width="200"
+		WindowStyle="None" AllowsTransparency="True"
+		ShowInTaskbar="False">
+	<Window.ContextMenu>
+		<ContextMenu UseLayoutRounding="True"
+					 SnapsToDevicePixels="True">
+			<ContextMenu.Template>
+				<ControlTemplate TargetType="{x:Type ContextMenu}">
+					<Border Background="{DynamicResource {x:Static SystemColors.WindowBrushKey}}"
+							BorderThickness="1"
+							BorderBrush="{DynamicResource {x:Static SystemColors.ActiveBorderBrushKey}}">
+						<StackPanel IsItemsHost="True"
+									Margin="2"
+									KeyboardNavigation.DirectionalNavigation="Cycle"/>
+					</Border>
+				</ControlTemplate>
+			</ContextMenu.Template>
+
+			<ContextMenu.Resources>
+				<Style TargetType="{x:Type MenuItem}" BasedOn="{StaticResource {x:Type MenuItem}}">
+					<Setter Property="BorderThickness" Value="0"/>
+					<Setter Property="Template">
+						<Setter.Value>
+							<ControlTemplate TargetType="{x:Type MenuItem}">
+								<Border x:Name="Container"
+										Background="{TemplateBinding Background}"
+										BorderThickness="{TemplateBinding BorderThickness}"
+										BorderBrush="{TemplateBinding BorderBrush}">
+									<Grid VerticalAlignment="Center">
+										<Grid.ColumnDefinitions>
+											<ColumnDefinition Width="Auto"/>
+											<ColumnDefinition Width="Auto"/>
+										</Grid.ColumnDefinitions>
+
+										<ContentPresenter Grid.Column="0"
+														  x:Name="Icon"
+														  Content="{TemplateBinding Icon}"
+														  ContentSource="Icon"
+														  Height="16" Width="16"
+														  Margin="5,3,3,3" HorizontalAlignment="Center" VerticalAlignment="Center"/>
+										<ContentPresenter Grid.Column="1"
+														  Content="{TemplateBinding Header}"
+														  ContentTemplate="{TemplateBinding HeaderTemplate}"
+														  ContentSource="Header"
+														  ContentStringFormat="{TemplateBinding HeaderStringFormat}"
+														  MinWidth="80"
+														  Margin="8,3,10,3" VerticalAlignment="Center"
+														  RecognizesAccessKey="True"/>
+									</Grid>
+								</Border>
+								<ControlTemplate.Triggers>
+									<Trigger Property="Icon" Value="{x:Null}">
+										<Setter Property="Visibility" TargetName="Icon" Value="Hidden"/>
+									</Trigger>
+									<Trigger Property="IsHighlighted" Value="True">
+										<Setter Property="Background" TargetName="Container" Value="#FFC9DEF5"/>
+									</Trigger>
+									<Trigger Property="IsEnabled" Value="False">
+										<Setter Property="TextElement.Foreground" TargetName="Container" Value="#FF707070"/>
+									</Trigger>
+									<MultiTrigger>
+										<MultiTrigger.Conditions>
+											<Condition Property="IsHighlighted" Value="True"/>
+											<Condition Property="IsEnabled" Value="False"/>
+										</MultiTrigger.Conditions>
+										<Setter Property="Background" TargetName="Container" Value="#0A000000"/>
+									</MultiTrigger>
+								</ControlTemplate.Triggers>
+							</ControlTemplate>
+						</Setter.Value>
+					</Setter>
+				</Style>
+
+				<Style TargetType="{x:Type Separator}" BasedOn="{StaticResource {x:Type Separator}}">
+					<Setter Property="Margin" Value="0,2,2,2"/>
+				</Style>
+
+				<Style x:Key="IconTextStyle" TargetType="{x:Type TextBlock}">
+					<Setter Property="HorizontalAlignment" Value="Center"/>
+					<Setter Property="VerticalAlignment" Value="Center"/>
+					<Setter Property="FontFamily" Value="Segoe MDL2 Assets"/>
+					<Setter Property="FontSize" Value="16"/>
+				</Style>
+			</ContextMenu.Resources>
+
+			<!-- Title -->
+			<MenuItem Header="Hello Switcher" IsHitTestVisible="False"/>
+
+			<Separator/>
+
+			<!-- Settings -->
+			<MenuItem Header="Settings" Click="ShowSettingsClick">
+				<MenuItem.Icon>
+					<TextBlock Style="{StaticResource IconTextStyle}"
+							   Text="&#xE713;"/>
+				</MenuItem.Icon>
+			</MenuItem>
+
+			<Separator/>
+
+			<!-- Recheck -->
+			<MenuItem Header="Re-check USB camera" Click="RecheckClick">
+				<MenuItem.Icon>
+					<TextBlock Style="{StaticResource IconTextStyle}"
+							   Text="&#xE72C;"/>
+				</MenuItem.Icon>
+			</MenuItem>
+
+			<!-- Enable/Disable -->
+			<MenuItem Header="Enable built-in camera" Click="EnableClick"/>
+			<MenuItem Header="Disable built-in camera" Click="DisableClick"/>
+
+			<Separator/>
+
+			<!-- Close -->
+			<MenuItem Header="Close" Click="CloseAppClick">
+				<MenuItem.Icon>
+					<TextBlock Style="{StaticResource IconTextStyle}"
+							   Text="&#xE711;"/>
+				</MenuItem.Icon>
+			</MenuItem>
+		</ContextMenu>
+	</Window.ContextMenu>
+
+</Window>

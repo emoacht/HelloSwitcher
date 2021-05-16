@@ -78,6 +78,13 @@
     <Compile Include="ViewModels\CameraViewModel.cs" />
     <Compile Include="ViewModels\SettingsWindowViewModel.cs" />
     <Compile Include="ViewModels\ViewModelBase.cs" />
+    <Compile Include="Views\MenuWindow.xaml.cs">
+      <DependentUpon>MenuWindow.xaml</DependentUpon>
+    </Compile>
+    <Page Include="Views\MenuWindow.xaml">
+      <SubType>Designer</SubType>
+      <Generator>MSBuild:Compile</Generator>
+    </Page>
     <Compile Include="Views\SettingsWindow.xaml.cs">
       <DependentUpon>SettingsWindow.xaml</DependentUpon>
     </Compile>
