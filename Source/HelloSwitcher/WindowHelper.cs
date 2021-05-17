@@ -4,12 +4,67 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows;
+using System.Windows.Interop;
 
 namespace HelloSwitcher
 {
 	internal static class WindowHelper
 	{
 		#region Win32
+
+		[DllImport("User32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool GetWindowPlacement(
+			IntPtr hWnd,
+			out WINDOWPLACEMENT lpwndpl);
+
+		[DllImport("User32.dll", SetLastError = true)]
+		[return: MarshalAs(UnmanagedType.Bool)]
+		private static extern bool SetWindowPlacement(
+			IntPtr hWnd,
+			[In] ref WINDOWPLACEMENT lpwndpl);
+
+		[StructLayout(LayoutKind.Sequential)]
+		private struct WINDOWPLACEMENT
+		{
+			public uint length;
+			public uint flags;
+			public uint showCmd;
+			public POINT ptMinPosition;
+			public POINT ptMaxPosition;
+			public RECT rcNormalPosition;
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		private struct POINT
+		{
+			public int x;
+			public int y;
+
+			public static implicit operator Point(POINT point) => new Point(point.x, point.y);
+			public static implicit operator POINT(Point point) => new POINT { x = (int)point.X, y = (int)point.Y };
+		}
+
+		[StructLayout(LayoutKind.Sequential)]
+		private struct RECT
+		{
+			public int left;
+			public int top;
+			public int right;
+			public int bottom;
+
+			public RECT(int left, int top, int right, int bottom)
+			{
+				this.left = left;
+				this.top = top;
+				this.right = right;
+				this.bottom = bottom;
+			}
+
+			public static implicit operator RECT(Rect rect) => new RECT((int)rect.Left, (int)rect.Top, (int)rect.Right, (int)rect.Bottom);
+			public static implicit operator Rect(RECT rect) => new Rect(rect.left, rect.top, (rect.right - rect.left), (rect.bottom - rect.top));
+		}
 
 		[DllImport("User32.dll", SetLastError = true)]
 		private static extern IntPtr FindWindowEx(
@@ -48,6 +103,32 @@ namespace HelloSwitcher
 		private const int S_OK = 0x0;
 
 		#endregion
+
+		public static Rect GetScreenLocation(FrameworkElement element)
+		{
+			if (element is null)
+				throw new ArgumentNullException(nameof(element));
+
+			return new Rect(
+				element.PointToScreen(new Point(0, 0)),
+				element.PointToScreen(new Point(element.ActualWidth, element.ActualHeight)));
+		}
+
+		public static void SetWindowLocation(Window window, Rect location)
+		{
+			if ((location.Width <= 0) || (location.Height <= 0))
+				throw new ArgumentException(nameof(location));
+
+			var windowHandle = new WindowInteropHelper(window).Handle;
+			if (!GetWindowPlacement(windowHandle, out WINDOWPLACEMENT windowPlacement))
+				return;
+
+			if (windowPlacement.rcNormalPosition == location)
+				return;
+
+			windowPlacement.rcNormalPosition = location;
+			SetWindowPlacement(windowHandle, ref windowPlacement);
+		}
 
 		public const int DefaultDpi = 96;
 

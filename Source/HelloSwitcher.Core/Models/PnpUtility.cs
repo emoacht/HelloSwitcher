@@ -42,37 +42,53 @@ namespace HelloSwitcher.Models
 			public string Description { get; }
 			public string Manufacturer { get; }
 			public string Status { get; }
-			public bool IsEnabled { get; }
 
 			public CameraItem(IEnumerable<string> lines)
 			{
-				foreach (var (key, value) in lines
+				foreach (var (key, value, index) in lines
 					.Where(x => !string.IsNullOrEmpty(x))
 					.Select(x => x.Split(new[] { ':' }, 2).Select(x => x.Trim()).ToArray())
 					.Where(x => x.Length == 2)
-					.Select(x => (key: x[0], value: x[1])))
+					.Select((x, index) => (key: x[0], value: x[1], index)))
 				{
 					switch (key)
 					{
-						case "Instance ID": DeviceInstanceId = value; break;
-						case "Device Description": Description = value; break;
-						case "Class Name": ClassName = value; break;
-						case "Class GUID":
-							try
-							{
-								ClassGuid = new Guid(value);
-							}
-							catch (FormatException)
-							{
-							}
-							break;
-						case "Manufacturer Name": Manufacturer = value; break;
-						case "Status": Status = value; break;
+						case "Instance ID": DeviceInstanceId = value; continue;
+						case "Device Description": Description = value; continue;
+						case "Class Name": ClassName = value; continue;
+						case "Class GUID": ClassGuid = Parse(value); continue;
+						case "Manufacturer Name": Manufacturer = value; continue;
+						case "Status": Status = value; continue;
+					}
+
+					// If ths OS's culture is a specific cultures (de-DE, fr-FR, es-ES, it-IT ...),
+					// PnPUtil will produce language-specific outputs rather than English ones
+					// even if the code pase is set to en-US. In such case, rely on index number.
+					switch (index)
+					{
+						case 0: DeviceInstanceId = value; break;
+						case 1: Description = value; break;
+						case 2: ClassName = value; break;
+						case 3: ClassGuid = Parse(value); break;
+						case 4: Manufacturer = value; break;
+						case 5: Status = value; break;
 					}
 				}
 
-				IsEnabled = !string.IsNullOrEmpty(Status)
-						 && !Status.Equals("Disabled", StringComparison.OrdinalIgnoreCase);
+				static Guid Parse(string source)
+				{
+					if (source is not null)
+					{
+						try
+						{
+							return new Guid(source);
+						}
+						catch (FormatException)
+						{
+						}
+					}
+					return default;
+				}
 			}
 		}
 
@@ -87,7 +103,10 @@ namespace HelloSwitcher.Models
 		public static async Task<CameraItem[]> GetCamerasAsync(string className, CancellationToken cancellationToken = default)
 		{
 			var lines = await ExecuteCommandLineAsync($"/enum-devices /class {className} /connected", cancellationToken);
-
+#if DEBUG
+			foreach (var line in lines)
+				Debug.WriteLine(line);
+#endif
 			IEnumerable<CameraItem> Enumerate()
 			{
 				var buffer = new List<string>();

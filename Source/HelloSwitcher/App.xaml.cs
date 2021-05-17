@@ -62,7 +62,7 @@ namespace HelloSwitcher
 				if (IsInteractive)
 				{
 					_holder?.UpdateIcon(_switcher.RemovableCameraExists);
-					await UpdateWindow();
+					await UpdateSettings();
 				}
 			};
 
@@ -74,42 +74,13 @@ namespace HelloSwitcher
 						"pack://application:,,,/HelloSwitcher;component/Resources/Disconnected.ico",
 						"pack://application:,,,/HelloSwitcher;component/Resources/Connected.ico",
 					},
-					"Hello Switcher",
-					new[]
-					{
-						(ToolStripItemType.Label, "Hello Switcher", (Action)null), // (Action) is necessary to indicate the type.
-						(ToolStripItemType.Separator, null, null),
-						(ToolStripItemType.Button, "Open settings", () => ShowWindow()),
-						(ToolStripItemType.Separator, null, null),
-						(ToolStripItemType.Button, "Re-check USB camera", async () =>
-						{
-							await _switcher.CheckAsync("Manual Check");
-							_holder.UpdateIcon(_switcher.RemovableCameraExists);
-							await UpdateWindow();
-						}),
-						(ToolStripItemType.Button, "Enable built-in camera", async () =>
-						{
-							await _switcher.EnableAsync();
-							await UpdateWindow();
-						}),
-						(ToolStripItemType.Button, "Disable built-in camera", async () =>
-						{
-							await _switcher.DisableAsync();
-							await UpdateWindow();
-						}),
-						(ToolStripItemType.Separator, null, null),
-						(ToolStripItemType.Button,"Close", async () =>
-						{
-							if (!RunAsService)
-								await _switcher.EnableAsync();
-
-							this.Shutdown();
-						})
-					});
+					"Hello Switcher");
 				_holder.UpdateIcon(_switcher.RemovableCameraExists);
 
+				_holder.MouseRightClick += (_, _) => ShowMenu();
+
 				if (!Settings.IsLoaded)
-					ShowWindow();
+					ShowSettings();
 			}
 		}
 
@@ -171,22 +142,68 @@ namespace HelloSwitcher
 
 		#region Window
 
-		private void ShowWindow()
+		private void ShowMenu()
 		{
-			var window = this.Windows.OfType<SettingsWindow>().FirstOrDefault();
-			if (window is not null)
+			if (this.MainWindow is not MenuWindow menuWindow)
 			{
-				window.Activate();
+				this.MainWindow = menuWindow = new MenuWindow();
+				menuWindow.Selected += OnSelected;
+			}
+
+			menuWindow.ShowContextMenu();
+			menuWindow.Activate();
+
+			async void OnSelected(object sender, MenuAction action)
+			{
+				switch (action)
+				{
+					case MenuAction.ShowSettings:
+						ShowSettings();
+						break;
+
+					case MenuAction.Recheck:
+						await _switcher.CheckAsync("Manual Check");
+						_holder.UpdateIcon(_switcher.RemovableCameraExists);
+						await UpdateSettings();
+						break;
+
+					case MenuAction.Enable:
+						await _switcher.EnableAsync();
+						await UpdateSettings();
+						break;
+
+					case MenuAction.Disable:
+						await _switcher.DisableAsync();
+						await UpdateSettings();
+						break;
+
+					case MenuAction.CloseApp:
+						if (!RunAsService)
+							await _switcher.EnableAsync();
+
+						this.Shutdown();
+						break;
+				}
+			}
+		}
+
+		private SettingsWindow _settingsWindow;
+
+		private void ShowSettings()
+		{
+			if (_settingsWindow is not null)
+			{
+				_settingsWindow.Activate();
 				return;
 			}
 
-			this.MainWindow = new SettingsWindow(this);
-			this.MainWindow.Closed += OnClosed;
-			this.MainWindow.Show();
+			_settingsWindow = new SettingsWindow(this);
+			_settingsWindow.Closed += OnClosed;
+			_settingsWindow.Show();
 
 			async void OnClosed(object sender, EventArgs e)
 			{
-				this.MainWindow = null;
+				_settingsWindow = null;
 				await _switcher.CheckAsync("Settings Changed Check");
 				_holder.UpdateIcon(_switcher.RemovableCameraExists);
 
@@ -206,13 +223,9 @@ namespace HelloSwitcher
 			}
 		}
 
-		private Task UpdateWindow()
+		private Task UpdateSettings()
 		{
-			var window = this.Windows.OfType<SettingsWindow>().FirstOrDefault();
-			if (window is null)
-				return Task.CompletedTask;
-
-			return window.SearchAsync();
+			return _settingsWindow?.SearchAsync() ?? Task.CompletedTask;
 		}
 
 		#endregion
