@@ -63,7 +63,7 @@ namespace HelloSwitcher.Models
 
 					// If ths OS's culture is a specific cultures (de-DE, fr-FR, es-ES, it-IT ...),
 					// PnPUtil will produce language-specific outputs rather than English ones
-					// even if the code pase is set to en-US. In such case, rely on index number.
+					// even if the code page is set to en-US. In such case, rely on index number.
 					switch (index)
 					{
 						case 0: DeviceInstanceId = value; break;
