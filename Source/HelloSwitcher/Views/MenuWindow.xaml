@@ -3,6 +3,7 @@
 		xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
 		Height="200" Width="200"
 		WindowStyle="None" AllowsTransparency="True"
+		Opacity="0"
 		ShowInTaskbar="False">
 	<Window.ContextMenu>
 		<ContextMenu UseLayoutRounding="True"
