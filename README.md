@@ -37,7 +37,7 @@ This tool consists of ordinary app and Windows service. The former (app) has the
 
 ## Getting started
 
-1. Run the installer. Start this app from the start menu. This app's icon will appear in the notification area. Right-click it to open the menu and select `Open settings`.
+1. Run the installer. Start this app from the start menu. This app's icon will appear in the notification area. Right-click it to open the menu and select `Settings`.
 
 2. In the settings window, specify a built-in camera for Windows Hello and a USB camera which you wish to use for Windows Hello. In addition, if you wish to run this tool in the background, check `Run as service when this app is not running`. Then click `Apply`. That’s all.
 
@@ -48,6 +48,11 @@ This tool consists of ordinary app and Windows service. The former (app) has the
     - In `Settings`, uncheck `Stop the task if it runs longer than:`.
 
 ## History
+
+Ver 1.4 2021-5-18
+
+- Change context menu
+- Fix settings window in specific cultures
 
 Ver 1.3 2021-5-4
 
