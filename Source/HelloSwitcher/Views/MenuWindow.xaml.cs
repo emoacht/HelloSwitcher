@@ -36,8 +36,8 @@ namespace HelloSwitcher.Views
 			// Get ContextMenu's location and place Window exactly behind it.
 			// This is not essential but Window needs to be placed somewhere on the desktop and
 			// ContextMenu's location seems to be most natural.
-			var location = WindowHelper.GetScreenLocation(this.ContextMenu);
-			WindowHelper.SetWindowLocation(this, location);
+			if (WindowHelper.TryGetScreenLocation(this.ContextMenu, out Rect location))
+				WindowHelper.SetWindowLocation(this, location);
 		}
 
 		protected override void OnDeactivated(EventArgs e)
