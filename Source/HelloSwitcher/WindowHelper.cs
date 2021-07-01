@@ -104,14 +104,21 @@ namespace HelloSwitcher
 
 		#endregion
 
-		public static Rect GetScreenLocation(FrameworkElement element)
+		public static bool TryGetScreenLocation(FrameworkElement element, out Rect location)
 		{
 			if (element is null)
 				throw new ArgumentNullException(nameof(element));
 
-			return new Rect(
-				element.PointToScreen(new Point(0, 0)),
-				element.PointToScreen(new Point(element.ActualWidth, element.ActualHeight)));
+			if (PresentationSource.FromVisual(element) is not null)
+			{
+				location = new Rect(
+					element.PointToScreen(new Point(0, 0)),
+					element.PointToScreen(new Point(element.ActualWidth, element.ActualHeight)));
+
+				return true;
+			}
+			location = default;
+			return false;
 		}
 
 		public static void SetWindowLocation(Window window, Rect location)
