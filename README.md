@@ -2,8 +2,9 @@
 
 Hello Switcher is a Windows desktop tool to help switching cameras for Windows Hello.
 
-| As of Windows 10 21H1, if both internal and external Windows Hello cameras are present, the external one will be used ([Introducing the next feature update to Windows 10, version 21H1](https://blogs.windows.com/windowsexperience/2021/02/17/introducing-the-next-feature-update-to-windows-10-version-21h1/)). Thus this tool is no longer necessary. |
+| NOTE |
 |-|
+| As of Windows 10 21H1 (19043), if both internal and external Windows Hello cameras are present, the external one will be automatically selected. Thus this tool is no longer necessary.  See [Introducing the next feature update to Windows 10, version 21H1](https://blogs.windows.com/windowsexperience/2021/02/17/introducing-the-next-feature-update-to-windows-10-version-21h1/) |
 
 ![Screenshot](Images/Screenshot_settings.png)<br>
 (DPI: 150%)
