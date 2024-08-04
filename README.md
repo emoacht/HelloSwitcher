@@ -53,6 +53,10 @@ This tool consists of ordinary app and Windows service. The former (app) has the
 
 ## History
 
+Ver 1.6 2024-8-4
+
+- Update library
+
 Ver 1.5 2021-6-24
 
 - Fix exception
