@@ -1,17 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.ServiceProcess;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.ServiceProcess;
 
-namespace HelloSwitcher.Service
+namespace HelloSwitcher.Service;
+
+static class Program
 {
-	static class Program
+	static void Main()
 	{
-		static void Main()
-		{
-			ServiceBase.Run(new HelloSwitcherService());
-		}
+		ServiceBase.Run(new HelloSwitcherService());
 	}
 }
