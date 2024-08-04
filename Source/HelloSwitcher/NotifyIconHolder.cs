@@ -2,109 +2,105 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
-using System.Windows.Threading;
 
-namespace HelloSwitcher
+namespace HelloSwitcher;
+
+public class NotifyIconHolder : IDisposable
 {
-	public class NotifyIconHolder : IDisposable
+	private readonly NotifyIcon _notifyIcon;
+
+	public event EventHandler MouseRightClick;
+
+	public NotifyIconHolder(string[] iconUriStrings, string iconText)
 	{
-		private readonly NotifyIcon _notifyIcon;
-
-		public event EventHandler MouseRightClick;
-
-		public NotifyIconHolder(string[] iconUriStrings, string iconText)
-		{
-			_icons = iconUriStrings.Select(x =>
-				{
-					var iconResource = System.Windows.Application.GetResourceStream(new Uri(x));
-					if (iconResource is null)
-						return default;
-
-					using var iconStream = iconResource.Stream;
-					return (icon: new System.Drawing.Icon(iconStream),
-							text: iconText + Environment.NewLine + Path.GetFileNameWithoutExtension(x));
-				})
-				.Where(x => x.icon is not null)
-				.ToArray();
-
-			if (_icons.Count < 2)
-				throw new ArgumentException("At least two valid URI strings are required.");
-
-			_notifyIcon = new NotifyIcon();
-			IconIndex = 0;
-
-			_notifyIcon.MouseClick += (_, e) =>
+		_icons = iconUriStrings.Select(x =>
 			{
-				if (e.Button == MouseButtons.Right)
-					MouseRightClick?.Invoke(this, EventArgs.Empty);
-			};
+				var iconResource = System.Windows.Application.GetResourceStream(new Uri(x));
+				if (iconResource is null)
+					return default;
 
-			// Show NotifyIcon.
-			_notifyIcon.Visible = true;
-		}
+				using var iconStream = iconResource.Stream;
+				return (icon: new System.Drawing.Icon(iconStream),
+						text: iconText + Environment.NewLine + Path.GetFileNameWithoutExtension(x));
+			})
+			.Where(x => x.icon is not null)
+			.ToArray();
 
-		#region Icons
+		if (_icons.Count < 2)
+			throw new ArgumentException("At least two valid URI strings are required.");
 
-		private readonly IReadOnlyList<(System.Drawing.Icon icon, string text)> _icons;
+		_notifyIcon = new NotifyIcon();
+		IconIndex = 0;
 
-		internal void UpdateIcon(bool exists)
+		_notifyIcon.MouseClick += (_, e) =>
 		{
-			IconIndex = Convert.ToInt32(exists);
-		}
+			if (e.Button == MouseButtons.Right)
+				MouseRightClick?.Invoke(this, EventArgs.Empty);
+		};
 
-		/// <summary>
-		/// Index number of icons
-		/// </summary>
-		/// <remarks>
-		/// 0: Disconnected icon
-		/// 1: Connected icon
-		/// </remarks>
-		public int IconIndex
+		// Show NotifyIcon.
+		_notifyIcon.Visible = true;
+	}
+
+	#region Icons
+
+	private readonly IReadOnlyList<(System.Drawing.Icon icon, string text)> _icons;
+
+	internal void UpdateIcon(bool exists)
+	{
+		IconIndex = Convert.ToInt32(exists);
+	}
+
+	/// <summary>
+	/// Index number of icons
+	/// </summary>
+	/// <remarks>
+	/// 0: Disconnected icon
+	/// 1: Connected icon
+	/// </remarks>
+	public int IconIndex
+	{
+		get => _iconIndex;
+		set
 		{
-			get => _iconIndex;
-			set
-			{
-				if ((_iconIndex == value) || (value < 0) || (_icons.Count <= value))
-					return;
-
-				_iconIndex = value;
-				_notifyIcon.Icon = _icons[value].icon;
-				_notifyIcon.Text = _icons[value].text;
-			}
-		}
-		private int _iconIndex = -1; // -1 is to let 0 come in as the first value.
-
-		#endregion
-
-		#region IDisposable
-
-		private bool _isDisposed = false;
-
-		public void Dispose()
-		{
-			Dispose(true);
-			GC.SuppressFinalize(this);
-		}
-
-		protected virtual void Dispose(bool disposing)
-		{
-			if (_isDisposed)
+			if ((_iconIndex == value) || (value < 0) || (_icons.Count <= value))
 				return;
 
-			if (disposing)
-			{
-				// Free any other managed objects here.
-				_notifyIcon?.ContextMenuStrip?.Dispose();
-				_notifyIcon?.Dispose();
-			}
+			_iconIndex = value;
+			_notifyIcon.Icon = _icons[value].icon;
+			_notifyIcon.Text = _icons[value].text;
+		}
+	}
+	private int _iconIndex = -1; // -1 is to let 0 come in as the first value.
 
-			// Free any unmanaged objects here.
-			_isDisposed = true;
+	#endregion
+
+	#region IDisposable
+
+	private bool _isDisposed = false;
+
+	public void Dispose()
+	{
+		Dispose(true);
+		GC.SuppressFinalize(this);
+	}
+
+	protected virtual void Dispose(bool disposing)
+	{
+		if (_isDisposed)
+			return;
+
+		if (disposing)
+		{
+			// Free any other managed objects here.
+			_notifyIcon?.ContextMenuStrip?.Dispose();
+			_notifyIcon?.Dispose();
 		}
 
-		#endregion
+		// Free any unmanaged objects here.
+		_isDisposed = true;
 	}
+
+	#endregion
 }
