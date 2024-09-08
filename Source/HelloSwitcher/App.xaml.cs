@@ -16,7 +16,8 @@ public partial class App : Application
 	internal Logger Logger { get; }
 
 	private DeviceSwitcher _switcher;
-	private DeviceUsbWindowWatcher _watcher;
+	private DeviceUsbWindowWatcher _deviceWatcher;
+	private PowerSuspendResumeWatcher _powerWatcher;
 	private NotifyIconHolder _holder;
 
 	internal static bool IsInteractive { get; } = Environment.UserInteractive;
@@ -50,8 +51,8 @@ public partial class App : Application
 		_switcher = new DeviceSwitcher(Settings, Logger);
 		await _switcher.CheckAsync("Initial Check");
 
-		_watcher = new DeviceUsbWindowWatcher();
-		_watcher.UsbDeviceChanged += async (_, e) =>
+		_deviceWatcher = new DeviceUsbWindowWatcher();
+		_deviceWatcher.UsbDeviceChanged += async (_, e) =>
 		{
 			await _switcher.CheckAsync("Device Changed Check", e.deviceName, e.exists);
 
@@ -59,6 +60,18 @@ public partial class App : Application
 			{
 				_holder?.UpdateIcon(_switcher.RemovableCameraExists);
 				await UpdateSettings();
+			}
+		};
+
+		_powerWatcher = new PowerSuspendResumeWatcher();
+		_powerWatcher.PowerStatusChanged += async (_, status) =>
+		{
+			switch (status)
+			{
+				case PowerStatus.ResumeAutomatic:
+				case PowerStatus.ResumeSuspend:
+					await _switcher.CheckAsync($"Resumed Check ({status})");
+					break;
 			}
 		};
 
@@ -81,7 +94,8 @@ public partial class App : Application
 
 	protected override void OnExit(ExitEventArgs e)
 	{
-		_watcher?.Dispose();
+		_deviceWatcher?.Dispose();
+		_powerWatcher?.Dispose();
 		_holder?.Dispose();
 		End();
 
