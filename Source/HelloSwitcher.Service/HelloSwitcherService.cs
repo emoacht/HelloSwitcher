@@ -3,7 +3,6 @@ using System.ServiceProcess;
 using System.Threading;
 using System.Threading.Tasks;
 
-using HelloSwitcher.Helper;
 using HelloSwitcher.Models;
 
 namespace HelloSwitcher.Service;
@@ -17,7 +16,6 @@ public partial class HelloSwitcherService : ServiceBase
 
 	internal bool IsPaused { get; private set; }
 
-	private readonly Sample _check;
 	private CancellationTokenSource _checkTokenSource;
 	private IntPtr _notificationHandle;
 
@@ -30,10 +28,6 @@ public partial class HelloSwitcherService : ServiceBase
 
 		Settings = new Settings();
 		Logger = new Logger("operation.service.log", "error.service.log");
-
-		_check = new Sample(
-			TimeSpan.FromSeconds(1),
-			(actionName, cancellationToken) => _switcher?.CheckAsync(actionName, cancellationToken));
 	}
 
 	protected override async void OnStart(string[] args)
@@ -91,7 +85,7 @@ public partial class HelloSwitcherService : ServiceBase
 			{
 				case PowerBroadcastStatus.ResumeAutomatic:
 				case PowerBroadcastStatus.ResumeSuspend:
-					_check.Push($"Power Changed Check", _checkTokenSource?.Token ?? default);
+					OnChanged($"Power Changed Check", _checkTokenSource?.Token ?? default);
 					break;
 			}
 		}
@@ -118,9 +112,14 @@ public partial class HelloSwitcherService : ServiceBase
 
 				if (!IsPaused)
 				{
-					_check.Push($"Device Changed Check", _checkTokenSource?.Token ?? default);
+					OnChanged($"Device Changed Check", _checkTokenSource?.Token ?? default);
 				}
 				break;
 		}
+	}
+
+	private async void OnChanged(string actionName, CancellationToken cancellationToken)
+	{
+		await _switcher?.CheckAsync(actionName, cancellationToken);
 	}
 }
